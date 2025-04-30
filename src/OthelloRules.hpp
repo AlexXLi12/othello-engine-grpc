@@ -1,5 +1,5 @@
 // Copyright (c) 2025 Alex Li
-// Rules.hpp
+// OthelloRules.hpp
 // Performs logic for Othello game rules
 
 #ifndef RULES_HPP
