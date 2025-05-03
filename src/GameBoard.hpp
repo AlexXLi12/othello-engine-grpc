@@ -7,6 +7,7 @@
 
 #include <cstdint> // For uint64_t
 #include <utility> // For std::unreachable
+#include "Constants.hpp" // For bitboard constants
 
 namespace othello {
 
@@ -36,10 +37,13 @@ namespace othello {
   /// @details The game board is represented using bitboards for both players.
   ///          Each bitboard is a 64-bit unsigned integer, where each bit represents
   ///          a square on the 8x8 board. A bit is set to 1 if the corresponding square
-  ///          is occupied by a piece of that color, and 0 if it is empty.
+  ///          is occupied by a piece of that color, and 0 if it is empty. The top-left
+  ///          corner of the board is represented by the least significant bit (LSB),
+  ///          and the bottom-right corner is represented by the most significant bit (MSB).
+  ///          The initial state of the board is set to the standard Othello starting position.
   struct GameBoard {
-    uint64_t black_bb = 0; // Bitboard for black pieces
-    uint64_t white_bb = 0; // Bitboard for white pieces
+    uint64_t black_bb = othello::INITIAL_BLACK; // Bitboard for black pieces
+    uint64_t white_bb = othello::INITIAL_WHITE; // Bitboard for white pieces
   };
 
 }  // namespace othello
