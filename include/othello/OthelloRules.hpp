@@ -7,7 +7,7 @@
 
 #include <vector>
 #include <utility> // For std::pair
-#include "GameBoard.hpp"
+#include "othello/GameBoard.hpp"
 
 namespace othello {
   

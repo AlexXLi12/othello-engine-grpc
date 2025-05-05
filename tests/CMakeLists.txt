@@ -17,6 +17,7 @@ add_executable(run_tests ${TEST_SOURCES})
 
 target_link_libraries(run_tests
   gtest_main
+  gmock_main
   othello_lib
 )
 

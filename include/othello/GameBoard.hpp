@@ -7,19 +7,16 @@
 
 #include <cstdint> // For uint64_t
 #include <utility> // For std::unreachable
-#include "Constants.hpp" // For bitboard constants
+#include "othello/Constants.hpp" // For bitboard constants
 
 namespace othello {
 
   /// @brief Represents the color of a piece on the Othello board
   /// @details The colors are represented as an enum class for type safety.
-  ///          BLACK and WHITE represent the two players, while NONE is used
-  ///          to indicate an empty square on the board.
   enum class Color
   {
     BLACK,
     WHITE,
-    NONE,  // to handle when no winner
   };
 
   /// @brief Returns the opponent color for a given color
