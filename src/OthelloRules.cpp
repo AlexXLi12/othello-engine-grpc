@@ -24,10 +24,10 @@ namespace othello {
     // Check West first
     // West = bit-shift right 1
     // this will get all frontier discs
-    uint64_t temp = (my_board & ~othello::LEFT_EDGE_MASK) >> 1 & op_board;
+    uint64_t temp = (my_board & othello::LEFT_EDGE_MASK) >> 1 & op_board;
     while (temp) {
       // shift right
-      temp = (temp & ~othello::LEFT_EDGE_MASK) >> 1;
+      temp = (temp & othello::LEFT_EDGE_MASK) >> 1;
       // check if we are on any empty squares
       check_empty(temp, empty_squares, possible_moves);
       // prepare for next iteration; & with op_board
@@ -35,57 +35,57 @@ namespace othello {
     }
     // Check East
     // East = bit-shift left 1
-    temp = (my_board & ~othello::RIGHT_EDGE_MASK) << 1 & op_board;
+    temp = (my_board & othello::RIGHT_EDGE_MASK) << 1 & op_board;
     while (temp) {
-      temp = (temp & ~othello::RIGHT_EDGE_MASK) << 1;
+      temp = (temp & othello::RIGHT_EDGE_MASK) << 1;
       check_empty(temp, empty_squares, possible_moves);
       temp &= op_board;
     }
     // Check North
     // North = bit-shift right 8
-    temp = (my_board & ~othello::TOP_EDGE_MASK) >> 8 & op_board;
+    temp = (my_board & othello::TOP_EDGE_MASK) >> 8 & op_board;
     while (temp) {
-      temp = (temp & ~othello::TOP_EDGE_MASK) >> 8;
+      temp = (temp & othello::TOP_EDGE_MASK) >> 8;
       check_empty(temp, empty_squares, possible_moves);
       temp &= op_board;
     }
     // Check South
     // South = bit-shift left 8
-    temp = (my_board & ~othello::BOTTOM_EDGE_MASK) << 8 & op_board;
+    temp = (my_board & othello::BOTTOM_EDGE_MASK) << 8 & op_board;
     while (temp) {
-      temp = (temp & ~othello::BOTTOM_EDGE_MASK) << 8;
+      temp = (temp & othello::BOTTOM_EDGE_MASK) << 8;
       check_empty(temp, empty_squares, possible_moves);
       temp &= op_board;
     }
     // Check North-West
     // North-West = bit-shift right 9
-    temp = (my_board & ~othello::LEFT_EDGE_MASK & ~othello::TOP_EDGE_MASK) >> 9 & op_board;
+    temp = (my_board & othello::LEFT_EDGE_MASK & othello::TOP_EDGE_MASK) >> 9 & op_board;
     while (temp) {
-      temp = (temp & ~othello::LEFT_EDGE_MASK & ~othello::TOP_EDGE_MASK) >> 9;
+      temp = (temp & othello::LEFT_EDGE_MASK & othello::TOP_EDGE_MASK) >> 9;
       check_empty(temp, empty_squares, possible_moves);
       temp &= op_board;
     }
     // Check North-East
     // North-East = bit-shift left 7
-    temp = (my_board & ~othello::RIGHT_EDGE_MASK & ~othello::TOP_EDGE_MASK) << 7 & op_board;
+    temp = (my_board & othello::RIGHT_EDGE_MASK & othello::TOP_EDGE_MASK) << 7 & op_board;
     while (temp) {
-      temp = (temp & ~othello::RIGHT_EDGE_MASK & ~othello::TOP_EDGE_MASK) << 7;
+      temp = (temp & othello::RIGHT_EDGE_MASK & othello::TOP_EDGE_MASK) << 7;
       check_empty(temp, empty_squares, possible_moves);
       temp &= op_board;
     }
     // Check South-West
     // South-West = bit-shift right 7
-    temp = (my_board & ~othello::LEFT_EDGE_MASK & ~othello::BOTTOM_EDGE_MASK) >> 7 & op_board;
+    temp = (my_board & othello::LEFT_EDGE_MASK & othello::BOTTOM_EDGE_MASK) >> 7 & op_board;
     while (temp) {
-      temp = (temp & ~othello::LEFT_EDGE_MASK & ~othello::BOTTOM_EDGE_MASK) >> 7;
+      temp = (temp & othello::LEFT_EDGE_MASK & othello::BOTTOM_EDGE_MASK) >> 7;
       check_empty(temp, empty_squares, possible_moves);
       temp &= op_board;
     }
     // Check South-East
     // South-East = bit-shift left 9
-    temp = (my_board & ~othello::RIGHT_EDGE_MASK & ~othello::BOTTOM_EDGE_MASK) << 9 & op_board;
+    temp = (my_board & othello::RIGHT_EDGE_MASK & othello::BOTTOM_EDGE_MASK) << 9 & op_board;
     while (temp) {
-      temp = (temp & ~othello::RIGHT_EDGE_MASK & ~othello::BOTTOM_EDGE_MASK) << 9;
+      temp = (temp & othello::RIGHT_EDGE_MASK & othello::BOTTOM_EDGE_MASK) << 9;
       check_empty(temp, empty_squares, possible_moves);
       temp &= op_board;
     }
