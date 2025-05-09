@@ -94,7 +94,139 @@ namespace othello {
   }
 
   bool is_valid_move(const GameBoard &b, int position, Color color) {
-    // TODO: Implement
+    uint64_t my_board = color == Color::BLACK ? b.black_bb : b.white_bb;
+    uint64_t op_board = color == Color::BLACK ? b.white_bb : b.black_bb;
+    uint64_t empty_squares = ~(my_board | op_board);
+    // First check if the position is empty
+    uint64_t temp = 1ULL << position;
+    if (!(temp & empty_squares)) {
+      return false;
+    }
+    /* Check if the move is valid in any direction */
+    // Check West
+    bool seen_opponent = false;
+    // West = bit-shift right 1
+    while (temp) {
+      // shift right
+      temp = (temp & othello::LEFT_EDGE_MASK) >> 1;
+      // check if we are on any empty squares
+      if (temp & empty_squares) { break; }  
+      // check if we are on any opponent discs
+      else if (temp & op_board) {
+        seen_opponent = true;
+      }  // check if we are on any of our own discs
+      else if (temp & my_board) {
+        if (seen_opponent) {
+          return true;
+        } else { break; }
+      }
+    }
+    // Check East
+    temp = 1ULL << position;
+    seen_opponent = false;
+    // East = bit-shift left 1
+    while (temp) {
+      temp = (temp & othello::RIGHT_EDGE_MASK) << 1;
+      if (temp & empty_squares) { break; } 
+      else if (temp & op_board) {
+        seen_opponent = true;
+      } else if (temp & my_board) {
+        if (seen_opponent) {
+          return true;
+        } else { break; }
+      }
+    }
+    // Check North
+    temp = 1ULL << position;
+    seen_opponent = false;
+    // North = bit-shift right 8
+    while (temp) {
+      temp = (temp & othello::TOP_EDGE_MASK) >> 8;
+      if (temp & empty_squares) { break; } 
+      else if (temp & op_board) {
+        seen_opponent = true;
+      } else if (temp & my_board) {
+        if (seen_opponent) {
+          return true;
+        } else { break; }
+      }
+    }
+    // Check South
+    temp = 1ULL << position;
+    seen_opponent = false;
+    // South = bit-shift left 8
+    while (temp) {
+      temp = (temp & othello::BOTTOM_EDGE_MASK) << 8;
+      if (temp & empty_squares) { break; } 
+      else if (temp & op_board) {
+        seen_opponent = true;
+      } else if (temp & my_board) {
+        if (seen_opponent) {
+          return true;
+        } else { break; }
+      }
+    }
+    // Check North-West
+    temp = 1ULL << position;
+    seen_opponent = false;
+    // North-West = bit-shift right 9
+    while (temp) {
+      temp = (temp & othello::LEFT_EDGE_MASK & othello::TOP_EDGE_MASK) >> 9;
+      if (temp & empty_squares) { break; } 
+      else if (temp & op_board) {
+        seen_opponent = true;
+      } else if (temp & my_board) {
+        if (seen_opponent) {
+          return true;
+        } else { break; }
+      }
+    }
+    // Check North-East
+    temp = 1ULL << position;
+    seen_opponent = false;
+    // North-East = bit-shift left 7
+    while (temp) {
+      temp = (temp & othello::RIGHT_EDGE_MASK & othello::TOP_EDGE_MASK) << 7;
+      if (temp & empty_squares) { break; } 
+      else if (temp & op_board) {
+        seen_opponent = true;
+      } else if (temp & my_board) {
+        if (seen_opponent) {
+          return true;
+        } else { break; }
+      }
+    }
+    // Check South-West
+    temp = 1ULL << position;
+    seen_opponent = false;
+    // South-West = bit-shift right 7
+    while (temp) {
+      temp = (temp & othello::LEFT_EDGE_MASK & othello::BOTTOM_EDGE_MASK) >> 7;
+      if (temp & empty_squares) { break; } 
+      else if (temp & op_board) {
+        seen_opponent = true;
+      } else if (temp & my_board) {
+        if (seen_opponent) {
+          return true;
+        } else { break; }
+      }
+    }
+    // Check South-East
+    temp = 1ULL << position;
+    seen_opponent = false;
+    // South-East = bit-shift left 9
+    while (temp) {
+      temp = (temp & othello::RIGHT_EDGE_MASK & othello::BOTTOM_EDGE_MASK) << 9;
+      if (temp & empty_squares) { break; } 
+      else if (temp & op_board) {
+        seen_opponent = true;
+      } else if (temp & my_board) {
+        if (seen_opponent) {
+          return true;
+        } else { break; }
+      }
+    }
+    // If we have not found any valid moves, return false
     return false;
   }
 

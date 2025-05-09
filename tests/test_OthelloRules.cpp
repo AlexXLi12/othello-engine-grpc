@@ -55,7 +55,16 @@ TEST_F(IntermediateBoardState, PossibleMovesIntermediateBoard) {
   EXPECT_THAT(possible_moves_white, ::testing::UnorderedElementsAreArray(expected_moves_white));
 }
 
-// Add more test cases here
+TEST_F(IntermediateBoardState, ValidMove) {
+  EXPECT_TRUE(othello::is_valid_move(*board, 20, othello::Color::BLACK));
+  EXPECT_FALSE(othello::is_valid_move(*board, 17, othello::Color::BLACK));
+  EXPECT_TRUE(othello::is_valid_move(*board, 19, othello::Color::WHITE));
+  EXPECT_FALSE(othello::is_valid_move(*board, 20, othello::Color::WHITE));
+  EXPECT_TRUE(othello::is_valid_move(*board, 25, othello::Color::WHITE));
+  EXPECT_FALSE(othello::is_valid_move(*board, 22, othello::Color::WHITE));
+  EXPECT_FALSE(othello::is_valid_move(*board, 60, othello::Color::BLACK));
+}
+
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
