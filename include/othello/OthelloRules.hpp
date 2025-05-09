@@ -14,9 +14,8 @@ namespace othello {
   /// @brief Return a vector of all possible move positions for the given color 
   /// @param b The game board to check for possible moves
   /// @param color The color whose possible moves to check
-  /// @return A vector of integers representing the positions of possible moves
-  ///         or an empty vector if no moves are possible
-  std::vector<int> get_possible_moves(const GameBoard &b, Color color);
+  /// @return A bitboard representing the possible moves
+  uint64_t get_possible_moves(const GameBoard &b, Color color);
 
   /// @brief Return whether a move is valid for the given color
   /// @param b The game board to check for the move

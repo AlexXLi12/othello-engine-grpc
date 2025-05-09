@@ -5,6 +5,7 @@
 #include "othello/GameBoard.hpp"
 #include "othello/OthelloRules.hpp"
 #include "utils/Visualize.hpp"
+#include "utils/BitboardUtils.hpp"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -39,18 +40,21 @@ TEST_F(StartingBoardState, InitialBoardSetup) {
 
 // Test valid moves for the initial board
 TEST_F(StartingBoardState, PossibleMovesInitialBoard) {
-  std::vector<int> possible_moves = othello::get_possible_moves(*board, othello::Color::BLACK);
+  std::vector<int> possible_moves = othello::bitboard_to_positions(
+    othello::get_possible_moves(*board, othello::Color::BLACK));
   std::vector<int> expected_moves = {19, 26, 37, 44};
   
   EXPECT_THAT(possible_moves, ::testing::UnorderedElementsAreArray(expected_moves));
 }
 
 TEST_F(IntermediateBoardState, PossibleMovesIntermediateBoard) {
-  std::vector<int> possible_moves = othello::get_possible_moves(*board, othello::Color::BLACK);
+  std::vector<int> possible_moves = othello::bitboard_to_positions(
+    othello::get_possible_moves(*board, othello::Color::BLACK));
   std::vector<int> expected_moves = {20, 22, 30, 34, 42, 50, 51};
   EXPECT_THAT(possible_moves, ::testing::UnorderedElementsAreArray(expected_moves));
 
-  std::vector<int> possible_moves_white = othello::get_possible_moves(*board, othello::Color::WHITE);
+  std::vector<int> possible_moves_white = othello::bitboard_to_positions(
+    othello::get_possible_moves(*board, othello::Color::WHITE));
   std::vector<int> expected_moves_white = {17, 19, 25, 37, 45, 52, 53};
   EXPECT_THAT(possible_moves_white, ::testing::UnorderedElementsAreArray(expected_moves_white));
 }
