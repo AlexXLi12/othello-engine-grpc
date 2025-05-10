@@ -59,21 +59,53 @@ namespace othello {
     uint64_t edge_mask
   ) {
     auto shift_op = [&](uint64_t x) -> uint64_t {
-        return shift > 0 ? (x & edge_mask) << shift : (x & edge_mask) >> -shift;
+      return shift > 0 ? (x & edge_mask) << shift : (x & edge_mask) >> -shift;
     };
 
-    uint64_t t = shift_op(my_board);
-    t &= op_board;
+    uint64_t t = shift_op(my_board) & op_board;
 
     for (int i = 0; i < 5; ++i) {
-        uint64_t temp = shift_op(t);
-        temp &= op_board;
-        t |= temp;
+      t |= shift_op(t) & op_board;
     }
 
     return shift_op(t) & empty;
   }
 
+  /// @brief Get bitfield of discs that can be flipped in the given direction
+  /// @param move The bitboard position of the move
+  /// @param my_board The bitboard of the player's discs
+  /// @param op_board The bitboard of the opponent's discs
+  /// @param empty The bitboard of empty squares
+  /// @param shift The shift direction (positive for left, negative for right)
+  /// @param edge_mask The edge mask to apply to the bitboard
+  /// @return A bitfield of the discs that can be flipped in the given direction
+  inline uint64_t get_directional_flips(
+    uint64_t move,
+    uint64_t my_board,
+    uint64_t op_board,
+    uint64_t empty,
+    int shift,
+    uint64_t edge_mask
+  ) {
+    auto shift_op = [&](uint64_t x) -> uint64_t {
+        return shift > 0 ? (x & edge_mask) << shift : (x & edge_mask) >> -shift;
+    };
+    uint64_t flips = 0;
+    while (true) {
+      move = shift_op(move);
+      if (move & op_board) {
+        // still flipping opponent's discs
+        flips |= move;
+      } else if (move & my_board) {
+        // reached our own disc; stop flipping
+        break;
+      } else {
+        // we're on empty square; no flips in this direction
+        return 0;
+      }
+    }
+    return flips;
+  }
 }
 
 #endif  // RULES_HPP
