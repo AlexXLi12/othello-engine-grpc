@@ -43,6 +43,37 @@ namespace othello {
   /// @param color The color of the player making the move
   /// @return A new GameBoard with the move applied
   GameBoard apply_move(const GameBoard &b, int position, Color color);
+
+  /// @brief Get the possible moves in the given shift direction
+  /// @param my_board The bitboard of the player's discs
+  /// @param op_board The bitboard of the opponent's discs
+  /// @param empty The bitboard of empty squares
+  /// @param shift The shift direction (positive for left, negative for right)
+  /// @param edge_mask The edge mask to apply to the bitboard
+  /// @return A bitfield of the possible moves in the given direction
+  inline uint64_t get_directional_moves(
+    uint64_t my_board,
+    uint64_t op_board,
+    uint64_t empty,
+    int shift,
+    uint64_t edge_mask
+  ) {
+    auto shift_op = [&](uint64_t x) -> uint64_t {
+        return shift > 0 ? (x & edge_mask) << shift : (x & edge_mask) >> -shift;
+    };
+
+    uint64_t t = shift_op(my_board);
+    t &= op_board;
+
+    for (int i = 0; i < 5; ++i) {
+        uint64_t temp = shift_op(t);
+        temp &= op_board;
+        t |= temp;
+    }
+
+    return shift_op(t) & empty;
+  }
+
 }
 
 #endif  // RULES_HPP
