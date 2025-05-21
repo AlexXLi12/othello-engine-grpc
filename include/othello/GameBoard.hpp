@@ -7,7 +7,7 @@
 
 #include <cstdint> // For uint64_t
 #include <utility> // For std::unreachable
-#include "othello/Constants.hpp" // For bitboard constants
+#include "Constants.hpp" // For bitboard constants
 
 namespace othello {
 
