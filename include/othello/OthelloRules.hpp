@@ -33,15 +33,6 @@ bool isTerminal(const GameBoard &b);
 ///         respectively.
 std::pair<int, int> countDiscs(const GameBoard &b);
 
-/// @brief Apply the move to the game board and return a new game board
-/// @details This function assumes that the move is valid.
-///          Passing in an invalid move will result in undefined behavior.
-/// @param b The game board to apply the move to
-/// @param position The position of the move to apply
-/// @param color The color of the player making the move
-/// @return A new GameBoard with the move applied
-GameBoard applyMove(const GameBoard &b, int position, Color color);
-
 /// @brief Get the possible moves in the given shift direction
 /// @param my_board The bitboard of the player's discs
 /// @param op_board The bitboard of the opponent's discs

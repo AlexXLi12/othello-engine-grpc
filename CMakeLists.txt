@@ -9,6 +9,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Add source files
 add_library (othello_lib
   src/OthelloRules.cpp
+  src/Engine.cpp
+  src/GameBoard.cpp
+  src/PositionalEvaluator.cpp
   src/utils/Visualize.cpp
 )
 
