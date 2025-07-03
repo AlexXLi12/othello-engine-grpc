@@ -40,11 +40,11 @@ private:
   /// @param depth Current search depth
   /// @param alpha Alpha value.
   /// @param beta Beta value.
-  /// @param is_maximizer True if the current player is the maximizer
+  /// @param color The color of the player to move
   /// @param evaluator The evaluator to use for scoring the board
   /// @return Pair of (score, move index)
   std::pair<int, int> negamax(const GameBoard &board, int depth, int alpha,
-                              int beta, bool is_maximizer,
+                              int beta, Color color,
                               const Evaluator &evaluator);
 
   std::map<uint64_t, TTEntry>
