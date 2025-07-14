@@ -1,4 +1,4 @@
-#include "othello/evaluator/PositionalEvaluator.hpp"
+#include "othello/evaluator/Evaluator.hpp"
 #include "othello/GameBoard.hpp"
 #include "othello/Constants.hpp"
 

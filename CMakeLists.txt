@@ -12,8 +12,15 @@ add_library (othello_lib
   src/Engine.cpp
   src/GameBoard.cpp
   src/PositionalEvaluator.cpp
+  src/Controller.cpp
   src/utils/Visualize.cpp
 )
+
+add_executable(othello_exec
+  src/main.cpp
+)
+# Link the library to the executable
+target_link_libraries(othello_exec PRIVATE othello_lib)
 
 target_include_directories(othello_lib PUBLIC ${PROJECT_SOURCE_DIR}/include)
 

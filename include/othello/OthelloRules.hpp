@@ -4,12 +4,13 @@
 
 #pragma once
 
-#include <utility> // For std::pair
-#include "othello/GameBoard.hpp"
+#include <utility>  // For std::pair
+
+#include "GameBoard.hpp"
 
 namespace othello {
 
-/// @brief Return a vector of all possible move positions for the given color 
+/// @brief Return a vector of all possible move positions for the given color
 /// @param b The game board to check for possible moves
 /// @param color The color whose possible moves to check
 /// @return A bitboard representing the possible moves
@@ -40,13 +41,9 @@ std::pair<int, int> countDiscs(const GameBoard &b);
 /// @param shift The shift direction (positive for left, negative for right)
 /// @param edge_mask The edge mask to apply to the bitboard
 /// @return A bitfield of the possible moves in the given direction
-inline uint64_t getDirectionalMoves(
-  uint64_t my_board,
-  uint64_t op_board,
-  uint64_t empty,
-  int shift,
-  uint64_t edge_mask
-) {
+inline uint64_t getDirectionalMoves(uint64_t my_board, uint64_t op_board,
+                                    uint64_t empty, int shift,
+                                    uint64_t edge_mask) {
   auto shift_op = [&](uint64_t x) -> uint64_t {
     return shift > 0 ? (x & edge_mask) << shift : (x & edge_mask) >> -shift;
   };
@@ -68,14 +65,9 @@ inline uint64_t getDirectionalMoves(
 /// @param shift The shift direction (positive for left, negative for right)
 /// @param edge_mask The edge mask to apply to the bitboard
 /// @return A bitfield of the discs that can be flipped in the given direction
-inline uint64_t getDirectionalFlips(
-  uint64_t move,
-  uint64_t my_board,
-  uint64_t op_board,
-  uint64_t empty,
-  int shift,
-  uint64_t edge_mask
-) {
+inline uint64_t getDirectionalFlips(uint64_t move, uint64_t my_board,
+                                    uint64_t op_board, uint64_t empty,
+                                    int shift, uint64_t edge_mask) {
   auto shift_op = [&](uint64_t x) -> uint64_t {
     return shift > 0 ? (x & edge_mask) << shift : (x & edge_mask) >> -shift;
   };
