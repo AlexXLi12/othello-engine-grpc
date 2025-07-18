@@ -11,12 +11,24 @@
 #include "evaluator/Evaluator.hpp"
 
 namespace othello {
+
+/// @brief Represents the type of bound for a transposition table entry
+/// @details This enum is used to indicate whether the score is an exact score,
+/// a lower bound, or an upper bound.
+enum class BoundType {
+  EXACT,  ///< Exact score
+  LOWER,  ///< Lower bound
+  UPPER   ///< Upper bound
+};
+
 /// @brief Represents a transposition table entry
 /// @details score is stored as an integer with positive values for black
 /// winning and negative values for white winning.
 struct TTEntry {
-  int score;  ///< The score of the position
-  int depth;  ///< The depth at which the position was evaluated
+  int score;             ///< The score of the position
+  int depth;             ///< The depth at which the position was evaluated
+  BoundType bound_type;  ///< The type of bound (exact, lower, upper)
+  int move_index;        ///< The index of the move that led to this position
 };
 
 /// @brief Represents the game engine for Othello
@@ -31,11 +43,12 @@ class Engine final {
   /// @param board The current game board
   /// @param max_depth The search depth for the negamax algorithm
   /// @param color The color of the player to move
+  /// @param prev_passed Whether the previous player passed their turn
   /// @param time_limit_ms The time limit for the search in milliseconds
   /// @return The index  of the best move found or -1 if
   ///         no valid moves are available.
   int findBestMove(const GameBoard &board, int max_depth, Color color,
-                   int time_limit_ms);
+                   bool prev_passed, int time_limit_ms);
 
  private:
   /// @brief Negamax search algorithm with alpha-beta pruning
@@ -44,15 +57,19 @@ class Engine final {
   /// @param alpha Alpha value.
   /// @param beta Beta value.
   /// @param color The color of the player to move
+  /// @param prev_passed Whether the previous player passed their turn
   /// @return Pair of (score, move index)
   std::pair<int, int> negamax(const GameBoard &board, int depth, int alpha,
-                              int beta, Color color);
+                              int beta, Color color, bool prev_passed);
 
-  std::map<uint64_t, TTEntry>
-      transposition_table;  ///< Transposition table for storing previously
-                            ///< evaluated positions
+  /// Transposition table for storing previously evaluated positions
+  std::map<uint64_t, TTEntry> transposition_table;
 
-  const Evaluator &evaluator;  ///< The evaluator to use for scoring the board
+  /// The evaluator to use for scoring the board
+  const Evaluator &evaluator;
+
+  /// The last player to move
+  Color last_to_move;
 };
 
 }  // namespace othello

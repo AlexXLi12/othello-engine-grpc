@@ -20,12 +20,11 @@ Engine::Engine(const Evaluator &evaluator) : evaluator(evaluator) {
 }
 
 int Engine::findBestMove(const GameBoard &board, int max_depth, Color color,
-                         int time_limit_ms) {
+                         bool prev_passed, int time_limit_ms) {
   std::pair<int, int> best_pair = std::make_pair(INT_MIN, -1);
   const auto start_time = std::chrono::steady_clock::now();
   // iterative deepening
   for (int depth = 1; depth <= max_depth; ++depth) {
-    std::cout << "Searching at depth " << depth << "..." << std::endl;
     const auto current_time = std::chrono::steady_clock::now();
     const auto elapsed_ms =
         std::chrono::duration_cast<std::chrono::milliseconds>(current_time -
@@ -37,7 +36,8 @@ int Engine::findBestMove(const GameBoard &board, int max_depth, Color color,
     }
     // clear transposition table for each depth
     transposition_table.clear();
-    const auto pair = negamax(board, depth, INT_MIN, INT_MAX, color);
+    const auto pair =
+        negamax(board, depth, INT_MIN, INT_MAX, color, prev_passed);
     if (pair.first > best_pair.first) {
       best_pair = pair;
     }
@@ -47,14 +47,15 @@ int Engine::findBestMove(const GameBoard &board, int max_depth, Color color,
 }
 
 std::pair<int, int> Engine::negamax(const GameBoard &board, int depth,
-                                    int alpha, int beta, Color color) {
+                                    int alpha, int beta, Color color,
+                                    bool prev_passed) {
   if (depth == 0) {
     const int score = static_cast<int>(color) * evaluator.evaluate(board);
     return {score, -1};  // Return score and no move index
   }
   uint64_t legal_moves_bb = othello::getPossibleMoves(board, color);
   if (legal_moves_bb == 0) {
-    if (othello::getPossibleMoves(board, opponent(color)) == 0) {
+    if (prev_passed) {
       // No legal moves for both players, game over. Evaluate based on disc
       // count.
       const auto disc_count = othello::countDiscs(board);
@@ -69,16 +70,17 @@ std::pair<int, int> Engine::negamax(const GameBoard &board, int depth,
       }
     }
     // pass turn
-    return negamax(board, depth - 1, -beta, -alpha, opponent(color));
+    return negamax(board, depth - 1, -beta, -alpha, opponent(color), true);
   }
+
   const std::vector<int> legal_moves =
       othello::bitboard_to_positions(legal_moves_bb);
   std::pair<int, int> best_pair = {
       INT_MIN, legal_moves[0]};  // initialize with worst case
   for (const int move : legal_moves) {
-    GameBoard new_board = othello::applyMove(board, move, color);
-    const auto pair = negamax(new_board, depth - 1, -beta, -alpha,
-                              opponent(color));
+    GameBoard new_board = othello::applyMove(board, move, color, prev_passed);
+    const auto pair =
+        negamax(new_board, depth - 1, -beta, -alpha, opponent(color), false);
     const int score = -pair.first;  // Negate the score for the opponent
     if (score > best_pair.first) {
       best_pair = {score, move};

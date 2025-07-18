@@ -18,23 +18,22 @@ namespace {
 /// @param color (Color) : The color of the player making the move
 /// @return uint64_t : The updated Zobrist hash after the move
 uint64_t updateZobristHash(uint64_t hash, int position, uint64_t flip_bb,
-                           othello::Color color) {
+                           othello::Color color, bool prev_passed) {
   if (color == othello::Color::BLACK) {
     hash ^= othello::zobrist_table[position][0];  // Black piece
-    while (flip_bb) {
-      int flip_pos = __builtin_ctzll(flip_bb);
-      hash ^= othello::zobrist_table[flip_pos][0];  // Flip to black piece
-      flip_bb &= (flip_bb - 1);  // Clear the least significant bit
-    }
   } else {
     hash ^= othello::zobrist_table[position][1];  // White piece
-    while (flip_bb) {
-      int flip_pos = __builtin_ctzll(flip_bb);
-      hash ^= othello::zobrist_table[flip_pos][1];  // Flip to white piece
-      flip_bb &= (flip_bb - 1);  // Clear the least significant bit
-    }
   }
-  hash ^= othello::zobrist_black_turn;  // Toggle turn
+  while (flip_bb) {
+    int flip_pos = __builtin_ctzll(flip_bb);
+    // Flip the piece
+    hash ^= othello::zobrist_table[flip_pos][0];
+    hash ^= othello::zobrist_table[flip_pos][1];
+    flip_bb &= (flip_bb - 1);  // Clear the least significant bit
+  }
+  if (!prev_passed) {
+    hash ^= othello::zobrist_black_turn;  // Toggle turn
+  }
   return hash;
 }
 }  // namespace
@@ -44,7 +43,7 @@ namespace othello {
 ZobristTable zobrist_table;
 uint64_t zobrist_black_turn;
 
-GameBoard applyMove(const GameBoard &b, int position, Color color) {
+GameBoard applyMove(const GameBoard &b, int position, Color color, bool prev_passed) {
   uint64_t my_board = color == Color::BLACK ? b.black_bb : b.white_bb;
   uint64_t op_board = color == Color::BLACK ? b.white_bb : b.black_bb;
   uint64_t empty = ~(my_board | op_board);
@@ -80,7 +79,7 @@ GameBoard applyMove(const GameBoard &b, int position, Color color) {
 
   my_board = my_board | pos_board | flips;
   op_board ^= flips;
-  uint64_t new_hash = updateZobristHash(b.zobrist_hash, position, flips, color);
+  uint64_t new_hash = updateZobristHash(b.zobrist_hash, position, flips, color, prev_passed);
   if (color == Color::BLACK) {
     return GameBoard(my_board, op_board, Color::WHITE, new_hash);
   } else {
