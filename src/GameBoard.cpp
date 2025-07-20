@@ -18,7 +18,7 @@ namespace {
 /// @param color (Color) : The color of the player making the move
 /// @return uint64_t : The updated Zobrist hash after the move
 uint64_t updateZobristHash(uint64_t hash, int position, uint64_t flip_bb,
-                           othello::Color color, bool prev_passed) {
+                           othello::Color color) {
   if (color == othello::Color::BLACK) {
     hash ^= othello::zobrist_table[position][0];  // Black piece
   } else {
@@ -31,9 +31,6 @@ uint64_t updateZobristHash(uint64_t hash, int position, uint64_t flip_bb,
     hash ^= othello::zobrist_table[flip_pos][1];
     flip_bb &= (flip_bb - 1);  // Clear the least significant bit
   }
-  if (!prev_passed) {
-    hash ^= othello::zobrist_black_turn;  // Toggle turn
-  }
   return hash;
 }
 }  // namespace
@@ -43,7 +40,7 @@ namespace othello {
 ZobristTable zobrist_table;
 uint64_t zobrist_black_turn;
 
-GameBoard applyMove(const GameBoard &b, int position, Color color, bool prev_passed) {
+GameBoard applyMove(const GameBoard &b, int position, Color color) {
   uint64_t my_board = color == Color::BLACK ? b.black_bb : b.white_bb;
   uint64_t op_board = color == Color::BLACK ? b.white_bb : b.black_bb;
   uint64_t empty = ~(my_board | op_board);
@@ -79,15 +76,18 @@ GameBoard applyMove(const GameBoard &b, int position, Color color, bool prev_pas
 
   my_board = my_board | pos_board | flips;
   op_board ^= flips;
-  uint64_t new_hash = updateZobristHash(b.zobrist_hash, position, flips, color, prev_passed);
-  if (color == Color::BLACK) {
-    return GameBoard(my_board, op_board, Color::WHITE, new_hash);
-  } else {
-    return GameBoard(op_board, my_board, Color::BLACK, new_hash);
+  uint64_t new_hash = updateZobristHash(b.zobrist_hash, position, flips, color);
+  uint64_t new_black = color == Color::BLACK ? my_board : op_board;
+  uint64_t new_white = color == Color::BLACK ? op_board : my_board;
+  Color next_player = color;
+  if (getPossibleMoves(GameBoard(new_black, new_white, color, 0),
+                       opponent(color)) != 0) {
+    next_player = opponent(color);
+    new_hash ^= zobrist_black_turn;  // Switch turn only if opponent has moves
   }
+  return GameBoard(new_black, new_white, next_player, new_hash);
 }
 
-/// @brief Initialize the zobrist hashing table
 void initializeZobrist() {
   std::mt19937_64 rng(
       std::chrono::system_clock::now().time_since_epoch().count());

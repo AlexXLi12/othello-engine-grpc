@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <map>  // For std::map
+#include <unordered_map>  // For std::map
 
 #include "GameBoard.hpp"  // For GameBoard
 #include "evaluator/Evaluator.hpp"
@@ -48,28 +48,29 @@ class Engine final {
   /// @return The index  of the best move found or -1 if
   ///         no valid moves are available.
   int findBestMove(const GameBoard &board, int max_depth, Color color,
-                   bool prev_passed, int time_limit_ms);
+                   int time_limit_ms);
 
  private:
+
+  int nodesSearched = 0;  ///< Number of nodes
+
+  int cacheHits = 0;  ///< Number of cache hits in the transposition table
+
   /// @brief Negamax search algorithm with alpha-beta pruning
   /// @param board Current game board
   /// @param depth Current search depth
   /// @param alpha Alpha value.
   /// @param beta Beta value.
   /// @param color The color of the player to move
-  /// @param prev_passed Whether the previous player passed their turn
   /// @return Pair of (score, move index)
   std::pair<int, int> negamax(const GameBoard &board, int depth, int alpha,
-                              int beta, Color color, bool prev_passed);
+                              int beta, Color color);
 
   /// Transposition table for storing previously evaluated positions
-  std::map<uint64_t, TTEntry> transposition_table;
+  std::unordered_map<uint64_t, TTEntry> transposition_table;
 
   /// The evaluator to use for scoring the board
   const Evaluator &evaluator;
-
-  /// The last player to move
-  Color last_to_move;
 };
 
 }  // namespace othello

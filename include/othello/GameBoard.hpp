@@ -23,6 +23,9 @@ enum class Color : int {
   WHITE = -1,
 };
 
+/// @brief Initialize the zobrist hashing table
+void initializeZobrist();
+
 /// @brief Generate a zobrist hash for the game board
 /// @param black_bb (uint64_t) : The bitboard for black pieces
 /// @param white_bb (uint64_t) : The bitboard for white pieces
@@ -77,9 +80,7 @@ inline Color opponent(Color c) {
 /// @param b The game board to apply the move to
 /// @param position The position of the move to apply
 /// @param color The color of the player making the move
-/// @param prev_passed Whether the previous player passed their turn
 /// @return A new GameBoard with the move applied
-GameBoard applyMove(const GameBoard &b, int position, Color color, 
-                    bool prev_passed);
+GameBoard applyMove(const GameBoard &b, int position, Color color);
 }  // namespace othello
 
