@@ -100,7 +100,7 @@ std::pair<int, int> Engine::negamax(const GameBoard &board, int depth,
   std::pair<int, int> best_pair = {
       INT_MIN, legal_moves[0]};  // initialize with worst case
   for (const int move : legal_moves) {
-    GameBoard new_board = applyMove(board, move, color);
+    const GameBoard new_board = applyMove(board, move, color);
     const auto pair =
         negamax(new_board, depth - 1, -beta, -alpha, opponent(color));
     const int score = -pair.first;  // Negate the opponent's score
