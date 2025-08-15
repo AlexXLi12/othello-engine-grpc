@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "othello/GameBoard.hpp"  // For GameBoard struct
+#include "../othello/GameBoard.hpp"  // For GameBoard struct
 
 namespace othello {
 /// @brief Return a string representation of the game board
