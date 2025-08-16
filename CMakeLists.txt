@@ -5,6 +5,7 @@ project(OthelloEngine)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Add source files
 add_library (othello_lib
@@ -14,6 +15,7 @@ add_library (othello_lib
   src/PositionalEvaluator.cpp
   src/Controller.cpp
   src/utils/Visualize.cpp
+  src/utils/ThreadPool.cpp
 )
 
 add_executable(othello_exec

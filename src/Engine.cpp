@@ -11,7 +11,6 @@
 
 #include "othello/GameBoard.hpp"
 #include "othello/OthelloRules.hpp"
-#include "utils/BitboardUtils.hpp"
 
 namespace othello {
 

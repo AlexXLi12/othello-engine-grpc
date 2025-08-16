@@ -8,7 +8,7 @@
 #include <unordered_map>  // For std::map
 
 #include "GameBoard.hpp"  // For GameBoard
-#include "evaluator/Evaluator.hpp"
+#include "othello/evaluator/Evaluator.hpp"
 
 namespace othello {
 
