@@ -14,14 +14,14 @@ class Controller {
  public:
   /// @brief Constructor for Controller
   /// @param engine The game engine to use for Othello
-  Controller(const Engine &engine)
+  Controller(Engine &engine)
       : engine(engine), board(createInitialBoard()) {};
 
   /// @brief Starts the game loop
   void startGame();
 
  private:
-  Engine engine;  ///< The game engine for Othello
+  Engine &engine;  ///< The game engine for Othello
 
   GameBoard board;  ///< The current game board
 

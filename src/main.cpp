@@ -11,7 +11,8 @@ int main() {
   // Create the engine with a positional evaluator
   othello::initializeZobrist();
   othello::PositionalEvaluator evaluator;  // Create the positional evaluator
-  othello::Engine engine(evaluator);  // Create the engine with the evaluator
+  utils::ThreadPool thread_pool(1); // Create a thread pool
+  othello::Engine engine(evaluator, thread_pool);  // Create the engine with the evaluator
   othello::Controller controller(engine); // Create the controller with the evaluator
   controller.startGame();  // Start the game loop
   return 0;                // Exit the program

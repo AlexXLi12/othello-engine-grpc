@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cstdint>  // For uint64_t
+#include <cstddef>  // For size_t
 
 namespace othello {
 

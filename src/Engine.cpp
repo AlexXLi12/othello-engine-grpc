@@ -9,6 +9,7 @@
 #include <climits>
 #include <iostream>
 #include <shared_mutex>
+#include <atomic>
 
 #include "othello/GameBoard.hpp"
 #include "othello/OthelloRules.hpp"
@@ -20,6 +21,14 @@ int Engine::findBestMove(const GameBoard &board, int max_depth, Color color,
                          int time_limit_ms) {
   std::pair<int, int> best_pair = std::make_pair(INT_MIN, -1);
   const auto start_time = std::chrono::steady_clock::now();
+  uint64_t legal_moves_bb = getPossibleMoves(board, color);
+  if (legal_moves_bb == 0) {
+    std::cout << "No legal moves available for color " << static_cast<int>(color)
+              << std::endl;
+    return -1; // No valid moves available
+  }
+  std::vector<int> legal_moves =
+      bitboard_to_positions(legal_moves_bb);
   // clear transposition table at the start of each search
   {
     std::unique_lock<std::shared_mutex> lock(tt_mutex);
@@ -34,35 +43,52 @@ int Engine::findBestMove(const GameBoard &board, int max_depth, Color color,
         std::chrono::duration_cast<std::chrono::milliseconds>(current_time -
                                                               start_time)
             .count();
+    std::cout << "Searching at depth " << depth << ", total time elapsed: " << elapsed_ms << std::endl;
     if (elapsed_ms >= time_limit_ms) {
       std::cout << "Time limit reached at depth " << depth << std::endl;
       break;
     }
-    uint64_t legal_moves_bb = getPossibleMoves(board, color);
-    std::vector<int> legal_moves =
-        bitboard_to_positions(legal_moves_bb);
     std::vector<std::future<std::pair<int, int>>> futures;
+    std::atomic<int> alpha{INT_MIN};
+    int beta = INT_MAX;
     // TODO: Fix logic
     // call negamax as opponent
     // YBW seed
-    // shared alpha and beta (atomic)
-    // time budgeting
-    for (const int move : legal_moves) {
+    std::pair<int, int> depth_best_pair;
+    {
+      GameBoard new_board = applyMove(board, legal_moves[0], color);
+      const auto pair = negamax(new_board, depth - 1, -beta, -alpha.load(),
+                                opponent(color));
+      const int root_best_score = -pair.first;
+      int cur = alpha.load();
+      while (root_best_score > cur && !alpha.compare_exchange_weak(cur, root_best_score)) {}
+      depth_best_pair = std::make_pair(root_best_score, legal_moves[0]);
+    }
+    for (int i = 1; i < legal_moves.size(); ++i) {
+      const int move = legal_moves[i];
       GameBoard new_board = applyMove(board, move, color);
       // add the search to the thread pool
-      std::future<std::pair<int, int>> pair = thread_pool.enqueue([this, move, new_board, depth, color]() {
-        const auto pair = negamax(new_board, depth, INT_MIN, INT_MAX, color);
-        return std::make_pair(pair.first, move); // Return score and move index
+      std::future<std::pair<int, int>> pair = thread_pool.enqueue([=, this, &alpha]() {
+        int local_alpha = alpha.load();
+        const auto nm = negamax(new_board, depth-1, -INT_MAX, -local_alpha, opponent(color));
+        int cur = alpha.load();
+        // Negate the score to get the score for the current player
+        int score = -nm.first;
+        while (score > cur && !alpha.compare_exchange_weak(cur, score)) {
+          // Try to update alpha until successful or -pair.first is not greater than cur
+        }
+        return std::make_pair(score, move); // Return score and move index
       });
       futures.push_back(std::move(pair));
     }
     // Wait for all futures to complete and find the best move
     for (auto &future : futures) {
       const auto pair = future.get();
-      if (pair.first > best_pair.first) {
-        best_pair = pair; // Update best move if found a better score
+      if (pair.first > depth_best_pair.first) {
+        depth_best_pair = pair; // Update best move if found a better score
       }
     }
+    best_pair = depth_best_pair;
   }
   {
     std::shared_lock<std::shared_mutex> lock(tt_mutex);
@@ -77,13 +103,14 @@ int Engine::findBestMove(const GameBoard &board, int max_depth, Color color,
 std::pair<int, int> Engine::negamax(const GameBoard &board, int depth,
                                     int alpha, int beta, Color color) {
   int alpha_orig = alpha;
-  const TTEntry *tt_entry = nullptr;
   bool entry_exists = false;
+  TTEntry entry_copy;
   {
     std::shared_lock<std::shared_mutex> lock(tt_mutex);
     auto it = transposition_table.find(board.zobrist_hash);
     if (it != transposition_table.end()) {
       entry_exists = true;
+      entry_copy = it->second;
       const TTEntry &entry = it->second;
       if (entry.depth >= depth) {
         // Use the stored value if it's valid for the current depth and bounds
@@ -93,7 +120,6 @@ std::pair<int, int> Engine::negamax(const GameBoard &board, int depth,
           ++cacheHits;
           return {entry.score, entry.move_index};
         }
-        tt_entry = &entry; // Use the entry for further checks
       }
     }
   }
@@ -121,7 +147,7 @@ std::pair<int, int> Engine::negamax(const GameBoard &board, int depth,
   std::vector<int> legal_moves = bitboard_to_positions(legal_moves_bb);
   // move transposition table entry to the front if it exists
   if (entry_exists) {
-    int tt_move = tt_entry->move_index;
+    int tt_move = entry_copy.move_index;
     auto it = std::find(legal_moves.begin(), legal_moves.end(), tt_move);
     if (it != legal_moves.end()) {
       std::iter_swap(legal_moves.begin(), it);

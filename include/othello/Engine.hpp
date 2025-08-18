@@ -9,9 +9,9 @@
 #include <shared_mutex>
 
 #include "GameBoard.hpp"
-#include "othello/Constants.hpp"
-#include "othello/evaluator/Evaluator.hpp"
-#include "utils/ThreadPool.hpp"
+#include "Constants.hpp"
+#include "evaluator/Evaluator.hpp"
+#include "../utils/ThreadPool.hpp"
 
 namespace othello {
 
@@ -43,7 +43,8 @@ public:
   /// @param evaluator The evaluator to use for scoring the board
   /// @param thread_pool The thread pool to use for parallelizing the search
   Engine(const Evaluator &evaluator, utils::ThreadPool &thread_pool)
-      : evaluator(evaluator), thread_pool(thread_pool) {
+      : nodesSearched(0), cacheHits(0), 
+        tt_mutex(), thread_pool(thread_pool), evaluator(evaluator) {
     // Initialize the transposition table
     transposition_table.reserve(TT_INITIAL_SIZE);
   }
@@ -59,9 +60,9 @@ public:
                    int time_limit_ms);
 
 private:
-  std::atomic<int> nodesSearched{0}; ///< Number of nodes searched in the search tree
+  std::atomic<int> nodesSearched; ///< Number of nodes searched in the search tree
 
-  std::atomic<int> cacheHits{0}; ///< Number of cache hits in the transposition table
+  std::atomic<int> cacheHits; ///< Number of cache hits in the transposition table
 
   /// @brief Negamax search algorithm with alpha-beta pruning
   /// @param board Current game board
