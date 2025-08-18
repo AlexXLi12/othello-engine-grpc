@@ -5,10 +5,13 @@
 
 #pragma once
 
-#include <unordered_map>  // For std::map
+#include <unordered_map>
+#include <shared_mutex>
 
-#include "GameBoard.hpp"  // For GameBoard
+#include "GameBoard.hpp"
+#include "othello/Constants.hpp"
 #include "othello/evaluator/Evaluator.hpp"
+#include "utils/ThreadPool.hpp"
 
 namespace othello {
 
@@ -16,29 +19,34 @@ namespace othello {
 /// @details This enum is used to indicate whether the score is an exact score,
 /// a lower bound, or an upper bound.
 enum class BoundType {
-  EXACT,  ///< Exact score
-  LOWER,  ///< Lower bound
-  UPPER   ///< Upper bound
+  EXACT, ///< Exact score
+  LOWER, ///< Lower bound
+  UPPER  ///< Upper bound
 };
 
 /// @brief Represents a transposition table entry
 /// @details score is stored as an integer with positive values for black
 /// winning and negative values for white winning.
 struct TTEntry {
-  int score;             ///< The score of the position
-  int depth;             ///< The depth at which the position was evaluated
-  BoundType bound_type;  ///< The type of bound (exact, lower, upper)
-  int move_index;        ///< The index of the move that led to this position
+  int score;            ///< The score of the position
+  int depth;            ///< The depth at which the position was evaluated
+  BoundType bound_type; ///< The type of bound (exact, lower, upper)
+  int move_index;       ///< The index of the move that led to this position
 };
 
 /// @brief Represents the game engine for Othello
 /// @details The engine performs a negamax search with alpha-beta pruning to
 /// find the best move.
 class Engine final {
- public:
+public:
   /// @brief Constructor for Engine
   /// @param evaluator The evaluator to use for scoring the board
-  Engine(const Evaluator &evaluator);
+  /// @param thread_pool The thread pool to use for parallelizing the search
+  Engine(const Evaluator &evaluator, utils::ThreadPool &thread_pool)
+      : evaluator(evaluator), thread_pool(thread_pool) {
+    // Initialize the transposition table
+    transposition_table.reserve(TT_INITIAL_SIZE);
+  }
   /// @brief Finds the best move for the current player
   /// @param board The current game board
   /// @param max_depth The search depth for the negamax algorithm
@@ -50,11 +58,10 @@ class Engine final {
   int findBestMove(const GameBoard &board, int max_depth, Color color,
                    int time_limit_ms);
 
- private:
+private:
+  std::atomic<int> nodesSearched{0}; ///< Number of nodes searched in the search tree
 
-  int nodesSearched = 0;  ///< Number of nodes
-
-  int cacheHits = 0;  ///< Number of cache hits in the transposition table
+  std::atomic<int> cacheHits{0}; ///< Number of cache hits in the transposition table
 
   /// @brief Negamax search algorithm with alpha-beta pruning
   /// @param board Current game board
@@ -68,10 +75,13 @@ class Engine final {
 
   /// Transposition table for storing previously evaluated positions
   std::unordered_map<uint64_t, TTEntry> transposition_table;
+  std::shared_mutex tt_mutex;
+
+  /// The thread pool for parallelizing the search
+  utils::ThreadPool &thread_pool;
 
   /// The evaluator to use for scoring the board
   const Evaluator &evaluator;
 };
 
-}  // namespace othello
-
+} // namespace othello

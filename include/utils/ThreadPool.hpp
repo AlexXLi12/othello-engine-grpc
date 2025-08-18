@@ -6,11 +6,11 @@
 
 #include <condition_variable>
 #include <functional>
-#include <tuple>
 #include <future>
 #include <mutex>
 #include <queue>
 #include <thread>
+#include <tuple>
 #include <type_traits>
 #include <vector>
 
@@ -37,11 +37,12 @@ public:
     using ArgsTuple_t = std::tuple<std::decay_t<Args>...>;
 
     auto task = std::make_shared<std::packaged_task<ReturnType()>>(
-        [f = Fn_t(std::forward<F>(f)), argsTuple = ArgsTuple_t(std::forward<Args>(args)...)]() mutable -> ReturnType {
+        [f = Fn_t(std::forward<F>(f)),
+         argsTuple =
+             ArgsTuple_t(std::forward<Args>(args)...)]() mutable -> ReturnType {
           // Unpack the tuple and call the function
           return std::apply(std::move(f), std::move(argsTuple));
-        }
-    );
+        });
     std::future<ReturnType> res = task->get_future();
     {
       std::unique_lock<std::mutex> lock(queueMutex);
