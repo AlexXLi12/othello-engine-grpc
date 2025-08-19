@@ -9,6 +9,7 @@
 #include <limits>  // For std::numeric_limits
 #include <set>
 #include <vector>
+#include <gperftools/profiler.h>
 
 #include "othello/GameBoard.hpp"
 #include "othello/OthelloRules.hpp"
@@ -19,7 +20,9 @@ namespace othello {
 
 void Controller::startGame() {
   Color current_color = Color::BLACK;  // Start with black player
-  while (true) {
+  int moves = 0;
+  while (moves < 5) {
+    ++moves;
     if (isTerminal(board)) {
       checkGameOver();
       break;
@@ -36,13 +39,16 @@ void Controller::startGame() {
       } else {
         std::cout << board_to_string_with_moves(board, possible_moves_bb)
                   << std::endl;
-        int move = handleUserInput(
-            std::set<int>(possible_moves.begin(), possible_moves.end()));
+        // int move = handleUserInput(
+        //     std::set<int>(possible_moves.begin(), possible_moves.end()));
+        int move = possible_moves[0];  // For simplicity, take the first move
         board = applyMove(board, move, Color::BLACK);
       }
     } else {
       std::cout << "AI is thinking..." << std::endl;
+      ProfilerEnable();
       int ai_move = engine.findBestMove(board, 30, current_color, 3000);
+      ProfilerDisable();
       if (ai_move == -1) {
         std::cout << "No valid moves available for AI. Passing." << std::endl;
       } else {
@@ -53,6 +59,7 @@ void Controller::startGame() {
     }
     current_color = opponent(current_color);  // Switch player
   }
+  ProfilerStop();
 }
 
 int Controller::handleUserInput(const std::set<int> &possible_moves) {

@@ -28,8 +28,5 @@ inline constexpr uint64_t A_SQUARE_MASK   = 0x4281000000008142ULL; // Mask for t
 inline constexpr uint64_t B_SQUARE_MASK   = 0x1800008181000018ULL; // Mask for the B squares (3, 4, 24, 31, 32, 39, 59, 60)
 inline constexpr uint64_t MID_SQUARE_MASK = 0x0000001818000000ULL; // Mask for the middle 4 squares (27, 28, 35, 36)
 
-// Engine constants
-inline constexpr size_t TT_INITIAL_SIZE = 1000000; // Initial size of the transposition table
-
 }  // namespace othello
 

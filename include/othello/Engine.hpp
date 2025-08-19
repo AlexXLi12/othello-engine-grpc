@@ -5,13 +5,11 @@
 
 #pragma once
 
-#include <unordered_map>
-#include <shared_mutex>
-
-#include "GameBoard.hpp"
-#include "Constants.hpp"
-#include "evaluator/Evaluator.hpp"
 #include "../utils/ThreadPool.hpp"
+#include "GameBoard.hpp"
+#include "evaluator/Evaluator.hpp"
+#include <cstdint>
+#include <unordered_map>
 
 namespace othello {
 
@@ -43,11 +41,8 @@ public:
   /// @param evaluator The evaluator to use for scoring the board
   /// @param thread_pool The thread pool to use for parallelizing the search
   Engine(const Evaluator &evaluator, utils::ThreadPool &thread_pool)
-      : nodesSearched(0), cacheHits(0), 
-        tt_mutex(), thread_pool(thread_pool), evaluator(evaluator) {
-    // Initialize the transposition table
-    transposition_table.reserve(TT_INITIAL_SIZE);
-  }
+      : nodesSearched(0), cacheHits(0), thread_pool(thread_pool),
+        evaluator(evaluator) {}
   /// @brief Finds the best move for the current player
   /// @param board The current game board
   /// @param max_depth The search depth for the negamax algorithm
@@ -60,23 +55,24 @@ public:
                    int time_limit_ms);
 
 private:
-  std::atomic<int> nodesSearched; ///< Number of nodes searched in the search tree
+  std::atomic<int>
+      nodesSearched; ///< Number of nodes searched in the search tree
 
-  std::atomic<int> cacheHits; ///< Number of cache hits in the transposition table
+  std::atomic<int>
+      cacheHits; ///< Number of cache hits in the transposition table
 
   /// @brief Negamax search algorithm with alpha-beta pruning
   /// @param board Current game board
+  /// @param transposition_table The transposition table to use for caching
   /// @param depth Current search depth
   /// @param alpha Alpha value.
   /// @param beta Beta value.
   /// @param color The color of the player to move
   /// @return Pair of (score, move index)
-  std::pair<int, int> negamax(const GameBoard &board, int depth, int alpha,
-                              int beta, Color color);
-
-  /// Transposition table for storing previously evaluated positions
-  std::unordered_map<uint64_t, TTEntry> transposition_table;
-  std::shared_mutex tt_mutex;
+  std::pair<int, int>
+  negamax(const GameBoard &board,
+          std::unordered_map<uint64_t, TTEntry> &transposition_table, int depth,
+          int alpha, int beta, Color color);
 
   /// The thread pool for parallelizing the search
   utils::ThreadPool &thread_pool;
@@ -86,3 +82,4 @@ private:
 };
 
 } // namespace othello
+
