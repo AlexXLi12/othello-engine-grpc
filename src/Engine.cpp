@@ -9,7 +9,6 @@
 #include <chrono> // For timing
 #include <climits>
 #include <cstdint>
-#include <iostream>
 #include <unordered_map>
 
 #include "othello/GameBoard.hpp"
@@ -33,20 +32,18 @@ int Engine::findBestMove(const GameBoard &board, int max_depth, Color color,
   for (auto &tt : tt_per_move)
     tt.reserve(1 << 19); // tune this
 
-  cacheHits = 0;
-  nodesSearched = 0;
-
   std::pair<int, int> best_pair{INT_MIN, -1};
 
-  for (int depth = 10; depth <= max_depth; ++depth) {
+  for (int depth = 1; depth <= max_depth; ++depth) {
+    cacheHits = 0;
+    nodesSearched = 0;
+
     auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                           std::chrono::steady_clock::now() - start_time)
                           .count();
     if (elapsed_ms >= time_limit_ms)
       break;
 
-    std::cout << "Searching depth " << depth << ". Time elapsed: " << elapsed_ms
-              << " ms" << std::endl;
     std::atomic<int> alpha{INT_MIN};
     const int beta = INT_MAX;
 

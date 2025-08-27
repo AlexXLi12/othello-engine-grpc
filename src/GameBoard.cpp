@@ -80,12 +80,12 @@ GameBoard applyMove(const GameBoard &b, int position, Color color) {
   uint64_t new_black = color == Color::BLACK ? my_board : op_board;
   uint64_t new_white = color == Color::BLACK ? op_board : my_board;
   Color next_player = color;
-  if (getPossibleMoves(GameBoard(new_black, new_white, color, 0),
+  if (getPossibleMoves(GameBoard(new_black, new_white, 0, color),
                        opponent(color)) != 0) {
     next_player = opponent(color);
     new_hash ^= zobrist_black_turn;  // Switch turn only if opponent has moves
   }
-  return GameBoard(new_black, new_white, next_player, new_hash);
+  return GameBoard(new_black, new_white, new_hash, next_player);
 }
 
 void initializeZobrist() {

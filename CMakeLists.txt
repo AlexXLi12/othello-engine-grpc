@@ -18,6 +18,8 @@ add_library(othello_lib
 
 add_executable(othello_exec src/main.cpp)
 
+add_executable(othello_benchmark src/benchmark.cpp)
+
 find_package(Threads REQUIRED)
 
 # Help CMake/pkg-config find Homebrew stuff
@@ -34,6 +36,8 @@ target_include_directories(othello_lib PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 # Executable just links the library; profiler comes via PUBLIC propagation
 target_link_libraries(othello_exec PRIVATE othello_lib)
+
+target_link_libraries(othello_benchmark PRIVATE othello_lib)
 
 # Ensure runtime can find libprofiler.dylib (no DYLD_* hacks)
 if(APPLE)

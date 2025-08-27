@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <array>    // For std::array
-#include <cstdint>  // For uint64_t
+#include <array>   // For std::array
+#include <cstdint> // For uint64_t
 
-#include "Constants.hpp"  // For bitboard constants
+#include "Constants.hpp" // For bitboard constants
 
 namespace othello {
 
@@ -42,30 +42,22 @@ uint64_t zobristHash(uint64_t black_bb, uint64_t white_bb, Color turn);
 ///          represented by the most significant bit (MSB). The initial state of
 ///          the board is set to the standard Othello starting position.
 struct GameBoard {
-  uint64_t black_bb;      ///< Bitboard for black pieces
-  uint64_t white_bb;      ///< Bitboard for white pieces
-  Color current_turn;     ///< The color of the player to move
-  uint64_t zobrist_hash;  ///< Zobrist hash for the board state
+  uint64_t black_bb;     ///< Bitboard for black pieces
+  uint64_t white_bb;     ///< Bitboard for white pieces
+  uint64_t zobrist_hash; ///< Zobrist hash for the board state
+  Color current_turn;    ///< The color of the player to move
 
-  GameBoard(uint64_t black,
-            uint64_t white, Color turn,
-            uint64_t hash)
-      : black_bb(black),
-        white_bb(white),
-        current_turn(turn),
-        zobrist_hash(hash) {}
+  GameBoard(uint64_t black, uint64_t white, uint64_t hash, Color turn)
+      : black_bb(black), white_bb(white), zobrist_hash(hash),
+        current_turn(turn) {}
 };
 
 /// @brief Factory function to create the initial game board
 inline GameBoard createInitialBoard() {
-  return GameBoard(
-    INITIAL_BLACK,
-    INITIAL_WHITE,
-    Color::BLACK,
-    zobristHash(INITIAL_BLACK, INITIAL_WHITE, Color::BLACK)
-  );
+  return GameBoard(INITIAL_BLACK, INITIAL_WHITE,
+                   zobristHash(INITIAL_BLACK, INITIAL_WHITE, Color::BLACK),
+                   Color::BLACK);
 }
-
 
 /// @brief Returns the opponent color for a given color
 /// @param c The color for which to find the opponent
@@ -82,5 +74,4 @@ inline Color opponent(Color c) {
 /// @param color The color of the player making the move
 /// @return A new GameBoard with the move applied
 GameBoard applyMove(const GameBoard &b, int position, Color color);
-}  // namespace othello
-
+} // namespace othello

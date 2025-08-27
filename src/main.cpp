@@ -12,7 +12,7 @@ int main() {
   // Create the engine with a positional evaluator
   othello::initializeZobrist();
   othello::PositionalEvaluator evaluator;  // Create the positional evaluator
-  ProfilerStart("cpu.prof");
+  ProfilerStart("cpu_single_thread.prof");
   ProfilerDisable();
   utils::ThreadPool thread_pool(5); // Create a thread pool
   othello::Engine engine(evaluator, thread_pool);  // Create the engine with the evaluator
