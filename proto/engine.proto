@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package engine;
+
+service EngineService {
+  rpc FindBestMove (FindBestMoveRequest) returns (FindBestMoveResponse);
+}
+
+message FindBestMoveRequest {
+  GameState game_state = 1;
+  uint32 time_limit_ms = 2; // Time limit in milliseconds. If 0 or not set, use default time limit
+  uint32 depth_limit   = 3; // Depth limit. If 0 or not set, use default depth limit
+}
+
+message FindBestMoveResponse {
+  int32 best_move = 1; // The best move found; -1 if no possible moves
+  int32 eval_score = 2; // Evaluation score of the best move
+}
+
+message GameState {
+  uint64 black_bb = 1; // Bitboard for black pieces
+  uint64 white_bb = 2; // Bitboard for white pieces
+  bool black_to_move = 3; // True if it's black's turn to move
+}
