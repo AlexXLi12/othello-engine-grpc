@@ -7,13 +7,33 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono> // For timing
-#include <climits>
 #include <cstdint>
+#include <iostream>
 #include <unordered_map>
 
 #include "othello/GameBoard.hpp"
 #include "othello/OthelloRules.hpp"
 #include "utils/BitboardUtils.hpp"
+
+static constexpr int INF = 1 << 20;
+
+namespace {
+using namespace othello;
+
+void order_moves(std::vector<int> &moves, Color color,
+                 const std::unordered_map<uint64_t, TTEntry> &tt,
+                 uint64_t zobrist_hash) {
+  auto it = tt.find(zobrist_hash);
+  if (it != tt.end()) {
+    int tt_move = it->second.move_index;
+    auto pos = std::find(moves.begin(), moves.end(), tt_move);
+    if (pos != moves.end()) {
+      std::iter_swap(moves.begin(), pos);
+    }
+  }
+}
+
+} // namespace
 
 namespace othello {
 
@@ -32,20 +52,22 @@ int Engine::findBestMove(const GameBoard &board, int max_depth, Color color,
   for (auto &tt : tt_per_move)
     tt.reserve(1 << 19); // tune this
 
-  std::pair<int, int> best_pair{INT_MIN, -1};
+  std::pair<int, int> best_pair{-INF, -1};
 
+  cacheHits = 0;
+  nodesSearched = 0;
   for (int depth = 1; depth <= max_depth; ++depth) {
-    cacheHits = 0;
-    nodesSearched = 0;
 
     auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                           std::chrono::steady_clock::now() - start_time)
                           .count();
-    if (elapsed_ms >= time_limit_ms)
+    if (elapsed_ms >= time_limit_ms) {
+      std::cout << "Time limit reached at depth " << (depth - 1) << std::endl;
       break;
+    }
 
-    std::atomic<int> alpha{INT_MIN};
-    const int beta = INT_MAX;
+    std::atomic<int> alpha{-INF};
+    const int beta = INF;
 
     // YBW seed
     std::pair<int, int> depth_best;
@@ -62,7 +84,7 @@ int Engine::findBestMove(const GameBoard &board, int max_depth, Color color,
       depth_best = {root_score, moves[0]};
     }
 
-    // Parallel brothers (moving-window optional)
+    // Parallel brothers
     std::vector<std::future<std::pair<int, int>>> futs;
     futs.reserve(moves.size() > 0 ? moves.size() - 1 : 0);
 
@@ -73,7 +95,7 @@ int Engine::findBestMove(const GameBoard &board, int max_depth, Color color,
 
       futs.push_back(thread_pool.enqueue([=, this, &alpha]() {
         int a = alpha.load();
-        auto r = negamax(child, *tt, depth - 1, -INT_MAX, -a, opponent(color));
+        auto r = negamax(child, *tt, depth - 1, -beta, -a, opponent(color));
         int score = -r.first;
         int cur = alpha.load();
         while (score > cur && !alpha.compare_exchange_weak(cur, score)) {
@@ -81,16 +103,19 @@ int Engine::findBestMove(const GameBoard &board, int max_depth, Color color,
         return std::make_pair(score, mv);
       }));
     }
-
     for (auto &f : futs) {
       auto res = f.get();
-      if (res.first > depth_best.first)
+      if (res.first > depth_best.first) {
         depth_best = res;
+      }
     }
 
     best_pair = depth_best;
   }
-
+  std::cout << "Nodes searched: " << nodesSearched
+            << " | Cache hits: " << cacheHits << std::endl;
+  std::cout << "Best move: " << best_pair.second
+            << " | Score: " << best_pair.first << std::endl;
   return best_pair.second;
 }
 
@@ -107,8 +132,8 @@ Engine::negamax(const GameBoard &board,
     if (entry.depth >= depth) {
       // Use the stored value if it's valid for the current depth and bounds
       if (entry.bound_type == BoundType::EXACT ||
-          (entry.bound_type == BoundType::LOWER && entry.score >= alpha) ||
-          (entry.bound_type == BoundType::UPPER && entry.score <= beta)) {
+          (entry.bound_type == BoundType::LOWER && entry.score >= beta) ||
+          (entry.bound_type == BoundType::UPPER && entry.score <= alpha)) {
         ++cacheHits;
         return {entry.score, entry.move_index};
       }
@@ -145,7 +170,7 @@ Engine::negamax(const GameBoard &board,
     }
   }
   std::pair<int, int> best_pair = {
-      INT_MIN, legal_moves[0]}; // initialize with worst case
+    -INF, legal_moves[0]}; // initialize with worst case
   for (const int move : legal_moves) {
     const GameBoard new_board = applyMove(board, move, color);
     const auto pair = negamax(new_board, transposition_table, depth - 1, -beta,
@@ -171,3 +196,4 @@ Engine::negamax(const GameBoard &board,
   return best_pair;
 }
 } // namespace othello
+
