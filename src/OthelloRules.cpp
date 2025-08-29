@@ -6,6 +6,7 @@
 #include "othello/Constants.hpp" // for bitboard constants
 #include "othello/GameBoard.hpp" // for GameBoard and Color
 
+#include <bit>
 #include <utility> // for std::pair
 #include <vector>
 
@@ -88,8 +89,8 @@ std::pair<int, int> countDiscs(const GameBoard &b) {
   std::pair<int, int> disc_count;
   uint64_t black_board = b.black_bb;
   uint64_t white_board = b.white_bb;
-  disc_count.first = __builtin_popcountll(black_board);
-  disc_count.second = __builtin_popcountll(white_board);
+  disc_count.first = std::popcount(black_board);
+  disc_count.second = std::popcount(white_board);
   return disc_count;
 }
 

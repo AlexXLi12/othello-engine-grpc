@@ -6,6 +6,7 @@
 
 #include <chrono>  // For time-based seeding
 #include <random>  // For random number generation
+#include <bit>
 
 #include "othello/OthelloRules.hpp"  // For isValidMove
 
@@ -25,7 +26,7 @@ uint64_t updateZobristHash(uint64_t hash, int position, uint64_t flip_bb,
     hash ^= othello::zobrist_table[position][1];  // White piece
   }
   while (flip_bb) {
-    int flip_pos = __builtin_ctzll(flip_bb);
+    int flip_pos = std::countr_zero(flip_bb);
     // Flip the piece
     hash ^= othello::zobrist_table[flip_pos][0];
     hash ^= othello::zobrist_table[flip_pos][1];
@@ -108,13 +109,13 @@ void initializeZobrist() {
 uint64_t zobristHash(uint64_t black_bb, uint64_t white_bb, Color turn) {
   uint64_t hash = 0;
   while (black_bb) {
-    int pos = __builtin_ctzll(
+    int pos = std::countr_zero(
         black_bb);  // Get the index of the least significant bit
     hash ^= zobrist_table[pos][0];  // XOR with the black piece hash
     black_bb &= (black_bb - 1);     // Clear the least significant bit
   }
   while (white_bb) {
-    int pos = __builtin_ctzll(
+    int pos = std::countr_zero(
         white_bb);  // Get the index of the least significant bit
     hash ^= zobrist_table[pos][1];  // XOR with the white piece hash
     white_bb &= (white_bb - 1);     // Clear the least significant bit
