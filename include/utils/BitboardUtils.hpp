@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <bit>
 #include <cstdint>
 #include <vector>
 
@@ -15,7 +16,7 @@ namespace othello {
 inline std::vector<int> bitboard_to_positions(uint64_t bitboard) {
   std::vector<int> positions;
   while (bitboard) {
-    int position = __builtin_ctzll(bitboard); // Get the index of the least significant bit
+    int position = std::countr_zero(bitboard); // Get the index of the least significant bit
     positions.push_back(position);
     bitboard &= (bitboard - 1); // Clear the least significant bit
   }
