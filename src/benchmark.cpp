@@ -11,6 +11,7 @@
 
 #include "othello/Engine.hpp"
 #include "othello/GameBoard.hpp"
+#include "othello/evaluator/Evaluator.hpp"
 #include "utils/ThreadPool.hpp"
 
 int main() {
@@ -18,13 +19,13 @@ int main() {
   othello::initializeZobrist();
 
   // Create evaluator + thread pool
-  othello::PositionalEvaluator evaluator;
-  utils::ThreadPool thread_pool(5);
+  othello::MobilityEvaluator evaluator;
+  utils::ThreadPool thread_pool(4);
   othello::Engine engine(evaluator, thread_pool);
 
   // Benchmarking parameters
   const std::vector<int> depths = {1, 5, 10, 15, 18};
-  const int num_runs = 5; // Number of runs per depth
+  const int num_runs = 3; // Number of runs per depth
 
   // Start position
   othello::GameBoard board = othello::createInitialBoard();

@@ -19,18 +19,18 @@ int MobilityEvaluator::evaluate(const GameBoard &board) const {
 
   score -= 300 * (std::popcount(board.black_bb & X_SQUARE_MASK) -
                  std::popcount(board.white_bb & X_SQUARE_MASK));
-  //
-  // score -= 50 * (std::popcount(board.black_bb & C_SQUARE_MASK) -
-  //                std::popcount(board.white_bb & C_SQUARE_MASK));
-  //
-  // score += 10 * (std::popcount(board.black_bb & A_SQUARE_MASK) -
-  //                std::popcount(board.white_bb & A_SQUARE_MASK));
-  //
-  // score += 2 * (std::popcount(board.black_bb & B_SQUARE_MASK) -
-  //               std::popcount(board.white_bb & B_SQUARE_MASK));
-  //
-  // score += 3 * (std::popcount(board.black_bb & MID_SQUARE_MASK) -
-  //               std::popcount(board.white_bb & MID_SQUARE_MASK));
+
+  score -= 50 * (std::popcount(board.black_bb & C_SQUARE_MASK) -
+                 std::popcount(board.white_bb & C_SQUARE_MASK));
+
+  score += 10 * (std::popcount(board.black_bb & A_SQUARE_MASK) -
+                 std::popcount(board.white_bb & A_SQUARE_MASK));
+
+  score += 2 * (std::popcount(board.black_bb & B_SQUARE_MASK) -
+                std::popcount(board.white_bb & B_SQUARE_MASK));
+
+  score += 3 * (std::popcount(board.black_bb & MID_SQUARE_MASK) -
+                std::popcount(board.white_bb & MID_SQUARE_MASK));
 
   // Evaluate mobility
   uint64_t black_mobility_board = getPossibleMoves(board, Color::BLACK);

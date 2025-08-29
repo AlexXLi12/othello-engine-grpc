@@ -11,6 +11,7 @@ add_library(othello_lib
   src/Engine.cpp
   src/GameBoard.cpp
   src/PositionalEvaluator.cpp
+  src/MobilityEvaluator.cpp
   src/Controller.cpp   # uses gperftools
   src/utils/Visualize.cpp
   src/utils/ThreadPool.cpp
