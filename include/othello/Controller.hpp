@@ -18,7 +18,9 @@ class Controller {
       : engine(engine), board(createInitialBoard()) {};
 
   /// @brief Starts the game loop
-  void startGame();
+  /// @param depth The maximum search depth for the engine
+  /// @param time_limit_ms The time limit for the engine in milliseconds
+  void startGame(int depth, int time_limit_ms);
 
  private:
   Engine &engine;  ///< The game engine for Othello
