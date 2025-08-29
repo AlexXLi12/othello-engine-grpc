@@ -22,7 +22,7 @@ inline constexpr uint64_t BOTTOM_EDGE_MASK = ~0xFF00000000000000ULL; // Reverse 
 
 // Special board position masks
 inline constexpr uint64_t CORNER_MASK     = 0x8100000000000081ULL; // Mask for the corners of the board
-inline constexpr uint64_t X_SQUARE_MASK   = 0x4200000000420000ULL; // Mask for the X squares (9, 14, 49, 54)
+inline constexpr uint64_t X_SQUARE_MASK   = 0x0042000000004200ULL; // Mask for the X squares (9, 14, 49, 54)
 inline constexpr uint64_t C_SQUARE_MASK   = 0x4281000000008142ULL; // Mask for the C squares (1, 6, 8, 15, 48, 55, 57, 62)
 inline constexpr uint64_t A_SQUARE_MASK   = 0x4281000000008142ULL; // Mask for the A squares (2, 5, 16, 23, 40, 47, 58, 61)
 inline constexpr uint64_t B_SQUARE_MASK   = 0x1800008181000018ULL; // Mask for the B squares (3, 4, 24, 31, 32, 39, 59, 60)
