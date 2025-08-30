@@ -23,6 +23,25 @@ using namespace othello;
 void order_moves(std::vector<int> &moves, Color color,
                  const std::unordered_map<uint64_t, TTEntry> &tt,
                  uint64_t zobrist_hash) {
+  // TODO: More sophisticated move ordering
+  std::stable_sort(moves.begin(), moves.end(), [](int a, int b) {
+    // Prefer corners
+    if ((a == 0 || a == 7 || a == 56 || a == 63) &&
+        !(b == 0 || b == 7 || b == 56 || b == 63))
+      return true;
+    if (!(a == 0 || a == 7 || a == 56 || a == 63) &&
+        (b == 0 || b == 7 || b == 56 || b == 63))
+      return false;
+    // Prefer edges
+    bool a_edge = (a < 8 || a >= 56 || a % 8 == 0 || a % 8 == 7);
+    bool b_edge = (b < 8 || b >= 56 || b % 8 == 0 || b % 8 == 7);
+    if (a_edge && !b_edge)
+      return true;
+    if (!a_edge && b_edge)
+      return false;
+    // Otherwise, no preference
+    return false;
+  });
   auto it = tt.find(zobrist_hash);
   if (it != tt.end()) {
     int tt_move = it->second.move_index;
@@ -52,6 +71,7 @@ int Engine::findBestMove(const GameBoard &board, int max_depth, Color color,
   for (auto &tt : tt_per_move)
     tt.reserve(1 << 19); // tune this
 
+  order_moves(moves, color, tt_per_move[0], board.zobrist_hash);
   std::pair<int, int> best_pair{-INF, -1};
 
   cacheHits = 0;
@@ -94,10 +114,23 @@ int Engine::findBestMove(const GameBoard &board, int max_depth, Color color,
       TT *tt = &tt_per_move[i]; // stable address; safe to capture
 
       futs.push_back(thread_pool.enqueue([=, this, &alpha]() {
-        int a = alpha.load();
-        auto r = negamax(child, *tt, depth - 1, -beta, -a, opponent(color));
-        int score = -r.first;
-        int cur = alpha.load();
+        int a = alpha.load(std::memory_order_relaxed);
+
+        // Scout search (zero window)
+        auto pr = negamax(child, *tt, depth - 1, -a - 1, -a, opponent(color));
+        int probe = -pr.first;
+
+        int score;
+        if (probe > a) {
+          // Re-search with full window
+          auto fr = negamax(child, *tt, depth - 1, -INF, -a, opponent(color));
+          score = -fr.first;
+        } else {
+          score = probe;
+        }
+
+        // Raise shared alpha
+        int cur = alpha.load(std::memory_order_relaxed);
         while (score > cur && !alpha.compare_exchange_weak(cur, score)) {
         }
         return std::make_pair(score, mv);
@@ -124,10 +157,8 @@ Engine::negamax(const GameBoard &board,
                 std::unordered_map<uint64_t, TTEntry> &transposition_table,
                 int depth, int alpha, int beta, Color color) {
   int alpha_orig = alpha;
-  bool entry_exists = false;
   auto it = transposition_table.find(board.zobrist_hash);
   if (it != transposition_table.end()) {
-    entry_exists = true;
     const TTEntry &entry = it->second;
     if (entry.depth >= depth) {
       // Use the stored value if it's valid for the current depth and bounds
@@ -161,29 +192,47 @@ Engine::negamax(const GameBoard &board,
   }
 
   std::vector<int> legal_moves = bitboard_to_positions(legal_moves_bb);
-  // move transposition table entry to the front if it exists
-  if (entry_exists) {
-    int tt_move = it->second.move_index;
-    auto it = std::find(legal_moves.begin(), legal_moves.end(), tt_move);
-    if (it != legal_moves.end()) {
-      std::iter_swap(legal_moves.begin(), it);
-    }
-  }
+
+  order_moves(legal_moves, color, transposition_table, board.zobrist_hash);
+
   std::pair<int, int> best_pair = {
-    -INF, legal_moves[0]}; // initialize with worst case
+      -INF, legal_moves[0]}; // initialize with worst case
+  bool first = true;
   for (const int move : legal_moves) {
     const GameBoard new_board = applyMove(board, move, color);
-    const auto pair = negamax(new_board, transposition_table, depth - 1, -beta,
-                              -alpha, opponent(color));
-    const int score = -pair.first; // Negate the opponent's score
+
+    int score;
+    if (first) {
+      // First move: full window to seed alpha
+      auto r = negamax(new_board, transposition_table, depth - 1, -beta, -alpha,
+                       opponent(color));
+      score = -r.first;
+      first = false;
+    } else {
+      // PVS: scout (zero-window) first
+      auto pr = negamax(new_board, transposition_table, depth - 1, -alpha - 1,
+                        -alpha, opponent(color));
+      int probe = -pr.first;
+
+      if (probe > alpha) {
+        // Fail-high -> re-search with full window
+        auto fr = negamax(new_board, transposition_table, depth - 1, -beta,
+                          -alpha, opponent(color));
+        score = -fr.first;
+      } else {
+        // Fail-low -> accept scout
+        score = probe;
+      }
+    }
+
     if (score > best_pair.first) {
       best_pair = {score, move};
     }
     alpha = std::max(alpha, score);
-    if (alpha >= beta) {
-      break; // Alpha-beta pruning
-    }
+    if (alpha >= beta)
+      break; // cutoff
   }
+
   BoundType bound_type;
   if (best_pair.first <= alpha_orig)
     bound_type = BoundType::UPPER;
