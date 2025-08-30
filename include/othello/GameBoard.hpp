@@ -18,7 +18,7 @@ extern uint64_t zobrist_black_turn;
 
 /// @brief Represents the color of a piece on the Othello board
 /// @details The colors are represented as an enum class for type safety.
-enum class Color : int {
+enum class Color : int8_t {
   BLACK = 1,
   WHITE = -1,
 };
@@ -42,10 +42,10 @@ uint64_t zobristHash(uint64_t black_bb, uint64_t white_bb, Color turn);
 ///          represented by the most significant bit (MSB). The initial state of
 ///          the board is set to the standard Othello starting position.
 struct GameBoard {
-  uint64_t black_bb;     ///< Bitboard for black pieces
-  uint64_t white_bb;     ///< Bitboard for white pieces
-  uint64_t zobrist_hash; ///< Zobrist hash for the board state
-  Color current_turn;    ///< The color of the player to move
+  uint64_t black_bb;     ///< Bitboard for black pieces (8 bytes)
+  uint64_t white_bb;     ///< Bitboard for white pieces (8 bytes)
+  uint64_t zobrist_hash; ///< Zobrist hash for the board state (8 bytes)
+  Color current_turn;    ///< The color of the player to move (1 byte)
 
   GameBoard(uint64_t black, uint64_t white, uint64_t hash, Color turn)
       : black_bb(black), white_bb(white), zobrist_hash(hash),

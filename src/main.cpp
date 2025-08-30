@@ -10,7 +10,8 @@
 
 int main(int argc, char **argv) {
   // Create the engine with a positional evaluator
-  int depth, time_limit_ms;
+  uint8_t depth;
+  int time_limit_ms;
   if (argc > 1) {
     // validate 0 < argv[1] <= 60
     if (std::atoi(argv[1]) <= 0 || std::atoi(argv[1]) > 60) {

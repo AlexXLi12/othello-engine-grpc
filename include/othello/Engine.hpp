@@ -16,7 +16,7 @@ namespace othello {
 /// @brief Represents the type of bound for a transposition table entry
 /// @details This enum is used to indicate whether the score is an exact score,
 /// a lower bound, or an upper bound.
-enum class BoundType {
+enum class BoundType : uint8_t {
   EXACT, ///< Exact score
   LOWER, ///< Lower bound
   UPPER  ///< Upper bound
@@ -26,11 +26,11 @@ enum class BoundType {
 /// @details score is stored as an integer with positive values for black
 /// winning and negative values for white winning.
 struct TTEntry {
-  int score;            ///< The score of the position
-  int depth;            ///< The depth at which the position was evaluated
-  BoundType bound_type; ///< The type of bound (exact, lower, upper)
-  int move_index;       ///< The index of the move that led to this position
-};
+  int score;            ///< The score of the position (4 bytes)
+  uint8_t depth;            ///< The depth at which the position was evaluated (2 bytes)
+  BoundType bound_type; ///< The type of bound (exact, lower, upper) (1 byte)
+  int8_t move_index;       ///< The index of the move that led to this position (1 byte)
+}; ///< Total size: 8 bytes
 
 /// @brief Represents the game engine for Othello
 /// @details The engine performs a negamax search with alpha-beta pruning to
@@ -51,7 +51,7 @@ public:
   /// @param time_limit_ms The time limit for the search in milliseconds
   /// @return The index  of the best move found or -1 if
   ///         no valid moves are available.
-  int findBestMove(const GameBoard &board, int max_depth, Color color,
+  int findBestMove(const GameBoard &board, uint8_t max_depth, Color color,
                    int time_limit_ms);
 
 private:
@@ -69,9 +69,9 @@ private:
   /// @param beta Beta value.
   /// @param color The color of the player to move
   /// @return Pair of (score, move index)
-  std::pair<int, int>
+  std::pair<int, int8_t>
   negamax(const GameBoard &board,
-          std::unordered_map<uint64_t, TTEntry> &transposition_table, int depth,
+          std::unordered_map<uint64_t, TTEntry> &transposition_table, uint8_t depth,
           int alpha, int beta, Color color);
 
   /// The thread pool for parallelizing the search

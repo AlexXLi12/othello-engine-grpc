@@ -48,7 +48,7 @@ int main() {
   othello::Engine engine(evaluator, thread_pool);
 
   // Benchmarking parameters
-  const std::vector<int> depths = {1, 5, 10, 13};
+  const std::vector<uint8_t> depths = {1, 5, 10, 13};
   const int num_runs = 10; // Number of runs per depth
 
   // Start position

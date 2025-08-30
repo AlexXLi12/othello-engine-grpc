@@ -56,7 +56,7 @@ void order_moves(std::vector<int> &moves, Color color,
 
 namespace othello {
 
-int Engine::findBestMove(const GameBoard &board, int max_depth, Color color,
+int Engine::findBestMove(const GameBoard &board, uint8_t max_depth, Color color,
                          int time_limit_ms) {
   using TT = std::unordered_map<uint64_t, TTEntry>;
   const auto start_time = std::chrono::steady_clock::now();
@@ -152,10 +152,10 @@ int Engine::findBestMove(const GameBoard &board, int max_depth, Color color,
   return best_pair.second;
 }
 
-std::pair<int, int>
+std::pair<int, int8_t>
 Engine::negamax(const GameBoard &board,
                 std::unordered_map<uint64_t, TTEntry> &transposition_table,
-                int depth, int alpha, int beta, Color color) {
+                uint8_t depth, int alpha, int beta, Color color) {
   int alpha_orig = alpha;
   auto it = transposition_table.find(board.zobrist_hash);
   if (it != transposition_table.end()) {
@@ -195,7 +195,7 @@ Engine::negamax(const GameBoard &board,
 
   order_moves(legal_moves, color, transposition_table, board.zobrist_hash);
 
-  std::pair<int, int> best_pair = {
+  std::pair<int, int8_t> best_pair = {
       -INF, legal_moves[0]}; // initialize with worst case
   bool first = true;
   for (const int move : legal_moves) {
