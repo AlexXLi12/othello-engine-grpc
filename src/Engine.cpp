@@ -6,42 +6,45 @@
 
 #include <algorithm>
 #include <atomic>
+#include <bit>
 #include <chrono> // For timing
 #include <cstdint>
 #include <iostream>
 #include <unordered_map>
 
+#include "othello/Constants.hpp"
 #include "othello/GameBoard.hpp"
 #include "othello/OthelloRules.hpp"
-#include "utils/BitboardUtils.hpp"
 
 static constexpr int INF = 1 << 20;
 
-namespace {
-using namespace othello;
+namespace othello {
 
-void order_moves(std::vector<int> &moves, Color color,
+using TT = std::unordered_map<uint64_t, TTEntry>;
+
+namespace {
+std::vector<int> order_moves(uint64_t moves_bb,
                  const std::unordered_map<uint64_t, TTEntry> &tt,
                  uint64_t zobrist_hash) {
-  // TODO: More sophisticated move ordering
-  std::stable_sort(moves.begin(), moves.end(), [](int a, int b) {
-    // Prefer corners
-    if ((a == 0 || a == 7 || a == 56 || a == 63) &&
-        !(b == 0 || b == 7 || b == 56 || b == 63))
-      return true;
-    if (!(a == 0 || a == 7 || a == 56 || a == 63) &&
-        (b == 0 || b == 7 || b == 56 || b == 63))
-      return false;
-    // Prefer edges
-    bool a_edge = (a < 8 || a >= 56 || a % 8 == 0 || a % 8 == 7);
-    bool b_edge = (b < 8 || b >= 56 || b % 8 == 0 || b % 8 == 7);
-    if (a_edge && !b_edge)
-      return true;
-    if (!a_edge && b_edge)
-      return false;
-    // Otherwise, no preference
-    return false;
-  });
+  // prefer corners and edges
+  // 1. corners
+  uint64_t corner_board = moves_bb & CORNER_MASK;
+  moves_bb &= ~CORNER_MASK;
+  // 2. edges
+  uint64_t edge_board = moves_bb & (EDGE_MASK);
+  moves_bb &= ~(EDGE_MASK);
+  std::vector<int> moves;
+  auto append_positions = [&moves](uint64_t bb) {
+    while (bb) {
+      int pos = std::countr_zero(bb);
+      moves.push_back(pos);
+      bb &= bb - 1;
+    }
+  };
+  append_positions(corner_board);
+  append_positions(edge_board);
+  append_positions(moves_bb);
+
   auto it = tt.find(zobrist_hash);
   if (it != tt.end()) {
     int tt_move = it->second.move_index;
@@ -50,28 +53,25 @@ void order_moves(std::vector<int> &moves, Color color,
       std::iter_swap(moves.begin(), pos);
     }
   }
+  return moves;
 }
 
 } // namespace
-
-namespace othello {
-
 int Engine::findBestMove(const GameBoard &board, uint8_t max_depth, Color color,
                          int time_limit_ms) {
-  using TT = std::unordered_map<uint64_t, TTEntry>;
   const auto start_time = std::chrono::steady_clock::now();
 
   uint64_t bb = getPossibleMoves(board, color);
   if (!bb)
     return -1;
-  std::vector<int> moves = bitboard_to_positions(bb);
 
   // One TT per root move (reused across depths)
-  std::vector<TT> tt_per_move(moves.size());
+  std::vector<TT> tt_per_move(std::popcount(bb));
   for (auto &tt : tt_per_move)
     tt.reserve(1 << 19); // tune this
 
-  order_moves(moves, color, tt_per_move[0], board.zobrist_hash);
+  std::vector<int> moves = order_moves(bb, tt_per_move[0], board.zobrist_hash);
+
   std::pair<int, int> best_pair{-INF, -1};
 
   cacheHits = 0;
@@ -191,9 +191,7 @@ Engine::negamax(const GameBoard &board,
     return {-pair.first, -1}; // Negate the opponent's score
   }
 
-  std::vector<int> legal_moves = bitboard_to_positions(legal_moves_bb);
-
-  order_moves(legal_moves, color, transposition_table, board.zobrist_hash);
+  std::vector<int> legal_moves = order_moves(legal_moves_bb, transposition_table, board.zobrist_hash);
 
   std::pair<int, int8_t> best_pair = {
       -INF, legal_moves[0]}; // initialize with worst case
@@ -245,4 +243,3 @@ Engine::negamax(const GameBoard &board,
   return best_pair;
 }
 } // namespace othello
-
