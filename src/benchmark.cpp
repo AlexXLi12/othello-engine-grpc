@@ -6,6 +6,7 @@
 #include <gperftools/profiler.h>
 #include <iomanip>
 #include <iostream>
+#include <random>
 #include <vector>
 #include <stdint.h>
 
@@ -21,13 +22,14 @@ namespace {
 
 std::vector<othello::GameBoard> getRandomBoards(int num_boards, int moves_per_board) {
   std::vector<othello::GameBoard> boards;
+  std::mt19937_64 rng(1738); // Fixed seed for reproducibility
   for (int i = 0; i < num_boards; ++i) {
     othello::GameBoard board = othello::createInitialBoard();
     othello::Color color = othello::Color::BLACK;
     for (int j = 0; j < moves_per_board; ++j) {
       std::vector<int> moves = othello::bitboard_to_positions(othello::getPossibleMoves(board, color));
       if (moves.empty()) break;
-      int move = moves[rand() % moves.size()];
+      int move = moves[rng() % moves.size()];
       board = othello::applyMove(board, move, color);
       color = othello::opponent(color);
     }
