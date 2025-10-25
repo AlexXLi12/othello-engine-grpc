@@ -19,7 +19,9 @@ COPY . .
 # Configure + build
 RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
 -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
- && cmake --build build -j
+ && cmake --build build -j \
+ && cp build/othello_exec /engine/ \
+ && cp build/othello_benchmark /engine/
 
 # ============ Runtime stage ============
 FROM ubuntu:22.04 AS runtime
@@ -32,8 +34,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /engine
-# copy only your built binary (adjust names/paths)
-COPY --from=build /engine/build/ /engine/build/
+COPY --from=build /engine/othello_exec /engine/
+COPY --from=build /engine/othello_benchmark /engine/
 
 # EXPOSE 50051
 ENTRYPOINT ["/engine/othello_exec"]
+
+# =========== Benchmark stage ============
+FROM runtime AS benchmark
+
+# Run othello_benchmark
+ENTRYPOINT ["/engine/othello_benchmark"]
