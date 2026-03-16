@@ -1,127 +1,240 @@
-# Othello Engine (C++23) — gRPC WIP
+# Othello Engine (C++23)
 
-High‑performance Othello/Reversi engine written in modern C++ with a focus on speed, memory efficiency, and clean architecture. The engine uses bitboards for constant‑time move operations (get possible moves, apply move), a Zobrist‑keyed transposition table, cache‑conscious data layouts, and parallel search.
+A high-performance Othello/Reversi engine written in modern C++ with a focus on search performance, compact board representation, and clear systems-oriented design.
 
-Note: The gRPC service is not yet completed. The protobuf contract lives in `proto/engine.proto`; the C++ gRPC server/client implementation is still in progress.
+This repository currently contains a working single-node engine with parallel root search, a benchmark target, unit tests, and an early gRPC contract. The distributed/service side is still a work in progress.
 
+## What is implemented today
 
-## Highlights
+### Engine core
 
-- Bitboards: Compact 64‑bit representation enables fast, branch‑light move generation and flipping.
-- Transposition Table + Zobrist: Caches search results with compact entries keyed by Zobrist hashes.
-- Cache‑optimized Layouts: Small, tightly‑packed structs for hot data; minimized indirection and allocations in inner loops.
-- Parallel Search: Work is split across a thread pool with PVS/YBW‑style coordination and lock‑free alpha updates.
-- Modern C++23: Clean, strong‑typed interfaces; standard atomics and utilities; portable and testable.
+- **Bitboard board representation** using `uint64_t` for black and white pieces
+- **Negamax + alpha-beta pruning**
+- **Principal Variation Search (PVS)-style search**
+- **Move ordering** with corners first, then edges, plus transposition-table move promotion
+- **Zobrist hashing** for board state keys
+- **Transposition table** using `std::unordered_map<uint64_t, TTEntry>`
+- **Parallel root search** using a custom thread pool and shared atomic alpha
+- **Evaluation layer** with positional and mobility evaluators
 
+### Tooling
 
-## Performance Deep Dive
+- **Benchmark executable** for measuring search throughput
+- **GoogleTest-based unit tests**
+- **Dockerfile / compose scaffold**
+- **Proto definition** for an eventual gRPC engine service
 
-### Bitboards and Constant‑Time Move Checks
+## What is not finished yet
 
-- Representation: Each side’s pieces live in a `uint64_t` bitboard. Masking and bit operations (shift, AND, OR) naturally encode Othello’s 8 directions on an 8×8 board.
-- Move Gen: Directional scans use shift operators with edge masks to accumulate flanked runs in O(1) per direction without per‑square loops:
-  - `getDirectionalMoves` computes legal destinations by iteratively extending through opponent discs and stopping at empties.
-  - `getDirectionalFlips` finds the exact pieces to flip for a specific move, again via directional shifts and masks.
-- Popcount‑centric: Counting mobility and features relies on `std::popcount`, which maps to efficient instructions on modern CPUs.
-- Heuristics by Masks: Corners, edges, X/C/A/B squares are pre‑encoded as masks, enabling fast static evaluation without per‑cell branching.
+- The **gRPC server/client implementation** is not wired up yet
+- The engine is still effectively a **single-node process**, not a distributed system
+- There is no real **request queue, load balancer, worker orchestration, or service discovery** yet
+- The current transposition-table design is practical, but not yet a custom cache-tuned or distributed TT
 
-Files of interest:
-- `include/othello/OthelloRules.hpp` + `src/OthelloRules.cpp`
-- `include/othello/Constants.hpp`
+## Why this project exists
 
+The goal of this project is not just to build a strong Othello engine.
+It is also a vehicle for exploring systems problems that show up in real infrastructure work:
 
-### Transposition Table with Zobrist Hashing
+- latency vs throughput tradeoffs
+- concurrency and coordination
+- caching behavior
+- performance profiling
+- service boundaries
+- eventually, distributed execution
 
-- Zobrist Keys: Each (square, color) pair has a random 64‑bit value, XOR‑combined to key positions; side‑to‑move is included via a side key.
-- Incremental Hashing: Applying a move updates the hash by XOR‑ing the placed piece and each flipped piece (constant‑time per flipped bit).
-- Compact Entries: `TTEntry` is intentionally small to improve cache residency:
-  - `score` (int), `depth` (uint8_t), `bound_type` (enum), `move_index` (int8_t) → 8 bytes total in practice.
-- Bound‑aware Hits: Entries store EXACT/LOWER/UPPER bounds; probes can tighten alpha/beta or return exact scores to prune aggressively.
-- Replacement/Partitioning: Simple replacement on store with depth awareness via probe logic; a table is reserved per root move to reduce contention in parallel search.
+Othello is a good domain for this because the engine core is compact and deterministic, which makes systems changes easier to reason about and benchmark.
 
-Files of interest:
-- `include/othello/GameBoard.hpp`, `src/GameBoard.cpp` (Zobrist init/hash/incremental updates)
-- `include/othello/Engine.hpp`, `src/Engine.cpp` (`TTEntry`, probing, storing)
+## Repository layout
 
-
-### Cache‑Optimized Structs and Data Flow
-
-- `GameBoard` packs hot fields contiguously: `black_bb`, `white_bb`, `zobrist_hash`, `current_turn`.
-- `TTEntry` is kept tiny to maximize entries per cache line, improving hit rate during deep searches.
-- Avoided indirection/allocation in inner loops; vectors are reserved when sizes are known; per‑depth/per‑root structures reduce churn.
-- Move ordering minimizes work: corners first, then edges, then the rest; the transposition move, if present, is promoted to the front.
-
-Files of interest:
-- `include/othello/GameBoard.hpp`
-- `src/Engine.cpp` (move ordering and layout‑sensitive loops)
-
-
-### Multithreaded Search (Thread Pool + PVS/YBW)
-
-- Parallelization Strategy: Iterative deepening at the root; seed the first child to establish a useful alpha, then search sibling moves in parallel using a work queue.
-- Thread Pool: A compact, generic pool with futures for result collection. Work is enqueued as lambdas capturing minimal state.
-- Coordination:
-  - Alpha is shared via an `std::atomic<int>`; workers perform scout (zero‑window) probes first and only re‑search on fail‑high.
-  - This mirrors Principal Variation Search (PVS) and Young Brothers Wait (YBW) ideas to keep parallel work productive and minimize wasted full‑window searches.
-- Contention‑Aware TT: Each root move uses its own `unordered_map<uint64_t, TTEntry>`, avoiding heavy synchronization on a single global table during parallel search.
-
-Files of interest:
-- `include/utils/ThreadPool.hpp`, `src/utils/ThreadPool.cpp`
-- `src/Engine.cpp` (parallel root, zero‑window probes, atomic alpha)
-
-
-## Architecture Overview
-
-- Core library (`othello_lib`)
-  - Rules: `OthelloRules` (move gen/validation, terminal checks)
-  - State: `GameBoard` (bitboards + Zobrist), `Constants` (masks)
-  - Engine: `Engine` (negamax + alpha‑beta, PVS, TT)
-  - Evaluation: `PositionalEvaluator`, `MobilityEvaluator`
-  - Utils: `ThreadPool`, `Visualize`, `BitboardUtils`
-- Executables
-  - `othello_exec`: Interactive/CLI loop via `Controller`
-  - `othello_benchmark`: Deterministic micro‑benchmarks across depths
-- Tests: `tests/` with GoogleTest; discovered via CTest
-- Proto (gRPC WIP): `proto/engine.proto` defines `EngineService.FindBestMove`
-
-
-## Metrics
-
-All measurements are from repeatable runs of the included benchmark harness on an Apple M4 2025 MacBook Air (10‑core), 24 GB RAM. Boards are generated deterministically from midgame positions, and the engine runs iterative deepening with parallelized root search.
-
-- Depth 10: 18.50M nodes/s on average, about 149.8 ms per position.
-- Depth 13: 8.93M nodes/s on average, about 7.87 s per position.
-
-Key optimizations reflected in the numbers:
-- Principal Variation Search (PVS) with bitboard‑native move ordering (corners → edges, TT‑seeded) cut per‑position latency by roughly **90%** versus a naïve alpha–beta baseline.
-- Sharded TT per thread reduced contention and **doubled** deep‑ply throughput in practice.
-- Move generation was rewritten to eliminate STL overhead in hot paths; combined with TT sharding, d13 latency improved from **8.7 s → 7.8 s** in our setup.
-
-
-## Repository Layout
-
-```
+```text
 .
 ├── include/
 │   ├── othello/
-│   │   ├── Engine.hpp, GameBoard.hpp, OthelloRules.hpp, Constants.hpp
-│   │   └── evaluator/Evaluator.hpp
-│   └── utils/BitboardUtils.hpp, ThreadPool.hpp, Visualize.hpp
+│   │   ├── Constants.hpp
+│   │   ├── Controller.hpp
+│   │   ├── Engine.hpp
+│   │   ├── GameBoard.hpp
+│   │   ├── OthelloRules.hpp
+│   │   └── evaluator/
+│   └── utils/
+├── proto/
+│   └── engine.proto
 ├── src/
-│   ├── Engine.cpp, GameBoard.cpp, OthelloRules.cpp
-│   ├── MobilityEvaluator.cpp, PositionalEvaluator.cpp
-│   ├── benchmark.cpp, main.cpp, Controller.cpp
-│   └── utils/ThreadPool.cpp, Visualize.cpp
+│   ├── Controller.cpp
+│   ├── Engine.cpp
+│   ├── GameBoard.cpp
+│   ├── MobilityEvaluator.cpp
+│   ├── OthelloRules.cpp
+│   ├── PositionalEvaluator.cpp
+│   ├── benchmark.cpp
+│   ├── main.cpp
+│   └── utils/
 ├── tests/
-│   ├── test_OthelloRules.cpp, CMakeLists.txt
-├── proto/engine.proto   # gRPC WIP
+│   ├── CMakeLists.txt
+│   └── test_OthelloRules.cpp
 ├── CMakeLists.txt
-├── Dockerfile, compose.yaml, README.Docker.md
-└── README.md
+├── Dockerfile
+├── README.Docker.md
+└── compose.yaml
 ```
 
+## Core design
 
-## gRPC Status (WIP)
+### 1. Bitboards
 
-- Contract: `proto/engine.proto` defines `EngineService.FindBestMove` and a compact `GameState` using bitboards.
-- Status: The C++ gRPC server/client plumbing has not been implemented yet. This README will be updated once the service is wired into the engine with request time/depth controls and a stable response schema.
+The engine uses a pair of 64-bit bitboards to represent board state. This keeps move generation and flipping operations compact and efficient, and avoids per-cell board structures in hot paths.
+
+Relevant files:
+- `include/othello/GameBoard.hpp`
+- `src/GameBoard.cpp`
+- `include/othello/Constants.hpp`
+- `src/OthelloRules.cpp`
+
+### 2. Search
+
+The main search algorithm is negamax with alpha-beta pruning. The implementation also uses a PVS-style approach where the first move is searched with a full window and later moves are first probed with a narrow scout window.
+
+Relevant files:
+- `include/othello/Engine.hpp`
+- `src/Engine.cpp`
+
+### 3. Move ordering
+
+Legal moves are ordered with a simple but effective heuristic:
+- corners first
+- then edges
+- then remaining moves
+- if a move exists in the transposition table, it is promoted to the front
+
+This helps pruning efficiency without overcomplicating the implementation.
+
+### 4. Parallel root search
+
+At the root, the first move is searched to seed alpha, then sibling moves are searched in parallel using a custom thread pool. The implementation uses a shared `std::atomic<int>` for alpha updates.
+
+This is the main concurrency mechanism in the repo today.
+
+Relevant files:
+- `include/utils/ThreadPool.hpp`
+- `src/utils/ThreadPool.cpp`
+- `src/Engine.cpp`
+
+### 5. Transposition table
+
+The engine stores search results in a hash table keyed by Zobrist hashes. Entries include:
+- score
+- depth
+- bound type
+- best move index
+
+The current implementation uses `std::unordered_map<uint64_t, TTEntry>`. At the root, the search uses one TT per root move to reduce contention during parallel search.
+
+This is a good practical baseline, though there is still room to push it much further from a cache-layout and systems perspective.
+
+## Build
+
+This project uses **CMake** and targets **C++23**.
+
+Typical flow:
+
+```bash
+cmake -S . -B build
+cmake --build build -j
+```
+
+Targets include:
+- `othello_exec`
+- `othello_benchmark`
+- test targets under `tests/`
+
+## Current caveats
+
+A few things are worth calling out explicitly:
+
+- The README used to describe some future-facing service/distributed ideas more strongly than the current code justified.
+- The gRPC layer is currently just a **proto contract**, not a finished service.
+- `main.cpp` still looks more like an interactive local executable than a service entrypoint.
+- The current system is best described as a **fast local engine with some parallel search**, not yet a distributed engine platform.
+
+## gRPC status
+
+The repository already includes a protobuf contract:
+
+- `proto/engine.proto`
+
+It defines:
+- `EngineService.FindBestMove`
+- `FindBestMoveRequest`
+- `FindBestMoveResponse`
+- `GameState`
+
+What is missing is the actual implementation layer:
+- generated stubs wired into the build
+- server implementation
+- request translation into engine calls
+- client or load generator
+- timeout/depth control semantics at the service boundary
+
+## Where this project can go next
+
+This project becomes much more compelling if it evolves from “strong engine” into “strong engine turned into a systems artifact.”
+
+### High-leverage next steps
+
+1. **Finish the gRPC service**
+   - implement server + request handling
+   - expose depth/time controls cleanly
+   - return structured search metadata
+
+2. **Add a real benchmark/service harness**
+   - request latency
+   - throughput under concurrency
+   - queueing behavior
+   - tail latency under load
+
+3. **Turn it into a multi-process/containerized system**
+   - one frontend service
+   - worker processes for search jobs
+   - containerized deployment with Compose/Kubernetes later if needed
+
+4. **Make the project observable**
+   - request metrics
+   - profiling hooks
+   - cache hit rate
+   - nodes searched
+   - time spent in move generation vs search vs evaluation
+
+5. **Upgrade the TT / search infrastructure**
+   - more cache-conscious storage
+   - capacity/replacement policy experiments
+   - contention-aware shared-state design
+   - possibly explore distributed result caching only after local performance is solid
+
+6. **Document the engineering tradeoffs**
+   - why this concurrency model
+   - why this board representation
+   - where the bottlenecks are
+   - what changed after profiling
+
+## Why those next steps matter
+
+If the goal is eventually to work on systems-heavy teams — the kind of places doing serious database, infra, and query/data-engine work — then the strongest version of this repo is not just:
+
+> “I built a game engine.”
+
+It is:
+
+> “I built a performant engine core, exposed it as a service, measured it under load, and used that to explore concurrency, caching, latency, and distributed-system tradeoffs.”
+
+That story is much closer to real infrastructure work.
+
+## Summary
+
+Today, this repo is already a solid engine project with real technical substance:
+- compact representation
+- serious search implementation
+- parallelism
+- benchmarking mindset
+
+The next leap is to make it a systems project, not just an engine project.
