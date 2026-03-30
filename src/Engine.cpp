@@ -24,7 +24,7 @@ using TT = std::unordered_map<uint64_t, TTEntry>;
 
 namespace {
 std::vector<int> order_moves(uint64_t moves_bb,
-                 const std::unordered_map<uint64_t, TTEntry> &tt,
+                 const TT &tt,
                  uint64_t zobrist_hash) {
   // prefer corners and edges
   // 1. corners
@@ -154,7 +154,7 @@ int Engine::findBestMove(const GameBoard &board, uint8_t max_depth, Color color,
 
 std::pair<int, int8_t>
 Engine::negamax(const GameBoard &board,
-                std::unordered_map<uint64_t, TTEntry> &transposition_table,
+                TT &transposition_table,
                 uint8_t depth, int alpha, int beta, Color color) {
   int alpha_orig = alpha;
   auto it = transposition_table.find(board.zobrist_hash);
