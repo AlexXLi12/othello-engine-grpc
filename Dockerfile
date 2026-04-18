@@ -1,47 +1,70 @@
-# ============ Build stage ============
-FROM ubuntu:22.04 AS build
+# syntax=docker/dockerfile:1
+
+ARG UBUNTU_VERSION=22.04
+
+FROM ubuntu:${UBUNTU_VERSION} AS base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Toolchain + gRPC/Protobuf dev pkgs
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential cmake pkg-config git curl ca-certificates \
-    protobuf-compiler protobuf-compiler-grpc libprotobuf-dev libprotoc-dev \
-    libgrpc++-dev grpc-proto \
-    google-perftools libgoogle-perftools-dev \
+    ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
-# Copy your source (adjust path as needed)
-WORKDIR /engine
-# If your repo has a top-level CMakeLists.txt, this is enough:
-COPY . .
+FROM base AS build
 
-# Configure + build
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    git \
+    libgmock-dev \
+    libgoogle-perftools-dev \
+    libgtest-dev \
+    pkg-config \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+
+COPY CMakeLists.txt ./
+COPY include ./include
+COPY src ./src
+COPY tests ./tests
+COPY proto ./proto
+
 RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
--DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
- && cmake --build build -j \
- && cp build/othello_exec /engine/ \
- && cp build/othello_benchmark /engine/
+    -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
+    -DOTHELLO_DOCKER_BUILD=ON \
+ && cmake --build build --parallel
 
-# ============ Runtime stage ============
-FROM ubuntu:22.04 AS runtime
+FROM build AS test
 
-# Minimal runtime libs (protobuf/grpc runtime shared objects)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libprotobuf23 libprotoc23 libabsl20210324 \
-    libgrpc++1 libgrpc10 ca-certificates \
-    google-perftools \
- && rm -rf /var/lib/apt/lists/*
+RUN ctest --test-dir build --output-on-failure
+
+CMD ["ctest", "--test-dir", "/workspace/build", "--output-on-failure"]
+
+FROM base AS runtime
 
 WORKDIR /engine
-COPY --from=build /engine/othello_exec /engine/
-COPY --from=build /engine/othello_benchmark /engine/
 
-# EXPOSE 50051
-ENTRYPOINT ["/engine/othello_exec"]
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    google-perftools \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --system --create-home --home-dir /engine othello \
+ && mkdir -p /engine/profiles \
+ && chown -R othello:othello /engine
 
-# =========== Benchmark stage ============
+COPY --from=build /workspace/build/othello_exec /usr/local/bin/othello_exec
+COPY --from=build /workspace/build/othello_benchmark /usr/local/bin/othello_benchmark
+
+ENV OTHELLO_PROFILE_DIR=/engine/profiles
+
+USER othello
+
+VOLUME ["/engine/profiles"]
+
+ENTRYPOINT ["othello_exec"]
+CMD ["15", "2000"]
+
 FROM runtime AS benchmark
 
-# Run othello_benchmark
-ENTRYPOINT ["/engine/othello_benchmark"]
+ENTRYPOINT ["othello_benchmark"]
+CMD []

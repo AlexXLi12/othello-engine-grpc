@@ -8,11 +8,11 @@
 #include <iostream>
 #include <limits>  // For std::numeric_limits
 #include <set>
-#include <gperftools/profiler.h>
 
 #include "othello/GameBoard.hpp"
 #include "othello/OthelloRules.hpp"
 #include "utils/BitboardUtils.hpp"
+#include "utils/Profiler.hpp"
 #include "utils/Visualize.hpp"
 
 namespace othello {
@@ -35,9 +35,9 @@ void Controller::startGame(int depth, int time_limit_ms) {
       std::cout << m << " ";
     }
     std::cout << std::endl;
-    ProfilerEnable();
+    utils::profiler::enable();
     int ai_move = engine.findBestMove(board, depth, current_color, time_limit_ms);
-    ProfilerDisable();
+    utils::profiler::disable();
     if (ai_move == -1) {
       std::cout << "No valid moves available for AI. Passing." << std::endl;
     } else {
@@ -48,7 +48,7 @@ void Controller::startGame(int depth, int time_limit_ms) {
     }
     current_color = opponent(current_color);  // Switch player
   }
-  ProfilerStop();
+  utils::profiler::stop();
 }
 
 int Controller::handleUserInput(const std::set<int> &possible_moves) {
@@ -90,4 +90,3 @@ void Controller::checkGameOver() {
   }
 }
 }  // namespace othello
-

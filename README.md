@@ -21,7 +21,7 @@ This repository currently contains a working single-node engine with parallel ro
 
 - **Benchmark executable** for measuring search throughput
 - **GoogleTest-based unit tests**
-- **Dockerfile / compose scaffold**
+- **Dockerized build, test, runtime, and benchmark targets**
 - **Proto definition** for an eventual gRPC engine service
 
 ## What is not finished yet
@@ -134,14 +134,29 @@ This is a good practical baseline, though there is still room to push it much fu
 
 ## Build
 
-This project uses **CMake** and targets **C++23**.
+This project uses **CMake** internally, targets **C++23**, and is intentionally
+Docker-only. Do not configure or run it directly on the host.
 
-Typical flow:
+Build and run the engine:
 
 ```bash
-cmake -S . -B build
-cmake --build build -j
+just run
 ```
+
+Run the test image:
+
+```bash
+just test
+```
+
+Run the benchmark image:
+
+```bash
+just benchmark
+```
+
+Profiling support is built into the Docker images, but profile collection is off
+unless `OTHELLO_PROFILE=1` is set.
 
 Targets include:
 - `othello_exec`

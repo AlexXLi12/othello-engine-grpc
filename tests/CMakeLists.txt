@@ -1,12 +1,5 @@
-include(FetchContent)
-
-FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG v1.16.0
-)
-
-FetchContent_MakeAvailable(googletest)
+find_package(GTest REQUIRED)
+find_library(GMOCK_LIBRARY NAMES gmock REQUIRED)
 
 # Auto-detect all test_*.cpp files
 file(GLOB TEST_SOURCES
@@ -16,8 +9,8 @@ file(GLOB TEST_SOURCES
 add_executable(run_tests ${TEST_SOURCES})
 
 target_link_libraries(run_tests
-  gtest_main
-  gmock_main
+  GTest::gtest
+  ${GMOCK_LIBRARY}
   othello_lib
 )
 

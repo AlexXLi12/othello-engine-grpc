@@ -3,7 +3,6 @@
 // Source code for benchmarking engine performance under various configurations.
 
 #include <chrono>
-#include <gperftools/profiler.h>
 #include <iomanip>
 #include <iostream>
 #include <random>
@@ -15,6 +14,7 @@
 #include "othello/OthelloRules.hpp"
 #include "othello/evaluator/Evaluator.hpp"
 #include "utils/BitboardUtils.hpp"
+#include "utils/Profiler.hpp"
 #include "utils/ThreadPool.hpp"
 #include "utils/Visualize.hpp"
 
@@ -64,7 +64,7 @@ int main() {
   std::cout << std::fixed << std::setprecision(3);
 
   // Start CPU profiler
-  ProfilerStart("cpu_5_thread.prof");
+  utils::profiler::start("cpu_5_thread.prof");
 
   for (int depth : depths) {
     double total_ms = 0.0;
@@ -89,9 +89,8 @@ int main() {
   }
 
   // Stop CPU profiler
-  ProfilerStop();
+  utils::profiler::stop();
 
   std::cout << "Benchmarking complete.\n";
   return 0;
 }
-

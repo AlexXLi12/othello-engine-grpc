@@ -1,17 +1,88 @@
-### Building and running your application
+# Docker Workflow
 
-When you're ready, start your application by running:
-`docker compose up --build`.
+The Docker build is the canonical way to build, test, and run this project
+without installing CMake, gperftools, or test dependencies on the host. Direct
+host CMake configuration is intentionally disabled.
 
-### Deploying your application to the cloud
+## Build and Run
 
-First, build your image, e.g.: `docker build -t myapp .`.
-If your cloud uses a different CPU architecture than your development
-machine (e.g., you are on a Mac M1 and your cloud provider is amd64),
-you'll want to build the image for that platform, e.g.:
-`docker build --platform=linux/amd64 -t myapp .`.
+With `just`:
 
-Then, push it to your registry, e.g. `docker push myregistry.com/myapp`.
+```bash
+just run
+```
 
-Consult Docker's [getting started](https://docs.docker.com/go/get-started-sharing/)
-docs for more detail on building and pushing.
+Without `just`:
+
+```bash
+docker compose up --build engine
+```
+
+The default engine command is:
+
+```bash
+othello_exec 15 2000
+```
+
+Override the depth or time limit by passing arguments to the image:
+
+```bash
+docker compose run --rm engine 10 1000
+```
+
+Or:
+
+```bash
+just run 10 1000
+```
+
+## Tests
+
+```bash
+docker compose --profile test up --build test
+```
+
+Or:
+
+```bash
+just test
+```
+
+The `test` image runs `ctest` during the image build and also uses `ctest` as
+its default command.
+
+## Benchmark
+
+```bash
+docker compose --profile benchmark up --build benchmark
+```
+
+Or:
+
+```bash
+just benchmark
+```
+
+Profiling is available in every runtime image but disabled by default. Enable it
+with `OTHELLO_PROFILE=1`:
+
+```bash
+OTHELLO_PROFILE=1 docker compose --profile benchmark up --build benchmark
+```
+
+Or:
+
+```bash
+just profile
+```
+
+CPU profiles are written under `/engine/profiles` inside the container when
+profiling is enabled. Compose persists that directory in the `profiles` volume.
+
+## Direct Docker Targets
+
+```bash
+docker build --target runtime -t othello-engine:local .
+docker build --target test -t othello-engine-test:local .
+docker build --target benchmark -t othello-engine-benchmark:local .
+```
