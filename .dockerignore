@@ -1,5 +1,6 @@
 .cache/
 .code-review-graph/
+.clangd-deps/
 .cursor/
 .git/
 .venv/

@@ -51,6 +51,18 @@ just test
 The `test` image runs `ctest` during the image build and also uses `ctest` as
 its default command.
 
+## Editor Setup
+
+Host editors use `compile_flags.txt` for clangd. Populate the editor-only
+dependency headers from Docker after cloning or after dependency changes:
+
+```bash
+just lsp
+```
+
+This creates `.clangd-deps/` from the Docker test image. The directory is ignored
+by git and is only for host-side clangd parsing.
+
 ## Benchmark
 
 ```bash

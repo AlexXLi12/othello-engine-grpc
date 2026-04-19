@@ -1,3 +1,6 @@
 .cache/
+.clangd-deps/
 build/
 *.prof
+# Added by code-review-graph
+.code-review-graph/
