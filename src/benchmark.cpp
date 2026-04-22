@@ -1,4 +1,4 @@
-// Copyright (c) 2025, Alex Li
+// Copyright (c) 2026, Alex Li
 // benchmark.cpp
 // Source code for benchmarking engine performance under various configurations.
 

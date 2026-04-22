@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Alex Li
+// Copyright (c) 2026 Alex Li
 // test_OthelloRules.cpp
 // Test cases for OthelloRules functions
 

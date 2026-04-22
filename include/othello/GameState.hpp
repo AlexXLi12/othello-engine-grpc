@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Alex Li
+// Copyright (c) 2026 Alex Li
 // GameState.hpp
 // Holds state information for a specific Othello game
 

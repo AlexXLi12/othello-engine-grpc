@@ -1,4 +1,4 @@
-// Copyright (c) Alex Li, 2025
+// Copyright (c) Alex Li, 2026
 // main.cpp
 // Main entry point for the Othello game
 

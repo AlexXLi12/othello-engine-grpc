@@ -1,4 +1,4 @@
-// Copyright (c) 2025, Alex Li
+// Copyright (c) 2026, Alex Li
 // BitboardUtils.hpp
 // Utility functions for translating between bitboard and 0-63 coordinates
 

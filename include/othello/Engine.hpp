@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Alex Li
+// Copyright (c) 2026 Alex Li
 // Engine.hpp
 // Game engine class for Othello. Performs negamax search with alpha-beta
 // pruning.

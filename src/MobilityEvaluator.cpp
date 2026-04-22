@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Alex Li
+// Copyright (c) 2026 Alex Li
 // MobilityEvaluator.cpp
 // Implementation of the MobilityEvaluator class for Othello game
 

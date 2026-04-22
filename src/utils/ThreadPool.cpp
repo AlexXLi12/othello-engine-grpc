@@ -1,4 +1,4 @@
-// Copyright (c) Alex Li, 2025
+// Copyright (c) Alex Li, 2026
 // ThreadPool.cpp
 // Implementation of a generic thread pool class
 

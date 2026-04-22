@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Alex Li
+// Copyright (c) 2026 Alex Li
 // GameBoard.cpp
 // Implements functions defined in GameBoard.hpp
 

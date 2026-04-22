@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Alex Li
+// Copyright (c) 2026 Alex Li
 // ThreadPool.hpp
 // Thread pool class to manage a pool of threads for parallel execution.
 

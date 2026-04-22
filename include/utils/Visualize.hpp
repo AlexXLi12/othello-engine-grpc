@@ -1,4 +1,4 @@
-// Copyright (c) 2025, Alex Li
+// Copyright (c) 2026, Alex Li
 // Visualize.hpp
 // Utility functions for visualizing the Othello game board
 

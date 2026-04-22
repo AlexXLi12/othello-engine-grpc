@@ -1,4 +1,4 @@
-// Copyright (c) Alex Li 2025
+// Copyright (c) Alex Li 2026
 // OthelloRules.cpp
 // Implements functions defined in OthelloRules.hpp
 
