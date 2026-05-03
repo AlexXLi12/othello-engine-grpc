@@ -13,6 +13,16 @@ services:
       - profiles:/engine/profiles
     command: ["15", "2000"]
 
+  server:
+    build:
+      context: .
+      target: server
+    image: othello-engine-server:local
+    environment:
+      OTHELLO_SERVER_ADDRESS: 0.0.0.0:50051
+    ports:
+      - "50051:50051"
+
   benchmark:
     profiles: ["benchmark"]
     build:

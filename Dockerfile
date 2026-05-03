@@ -16,10 +16,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     cmake \
     git \
+    libgrpc++-dev \
     libgmock-dev \
     libgoogle-perftools-dev \
     libgtest-dev \
+    libprotobuf-dev \
     pkg-config \
+    protobuf-compiler \
+    protobuf-compiler-grpc \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace
@@ -47,6 +51,7 @@ WORKDIR /engine
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     google-perftools \
+    libgrpc++1 \
  && rm -rf /var/lib/apt/lists/* \
  && useradd --system --create-home --home-dir /engine othello \
  && mkdir -p /engine/profiles \
@@ -54,6 +59,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=build /workspace/build/othello_exec /usr/local/bin/othello_exec
 COPY --from=build /workspace/build/othello_benchmark /usr/local/bin/othello_benchmark
+COPY --from=build /workspace/build/othello_server /usr/local/bin/othello_server
 
 ENV OTHELLO_PROFILE_DIR=/engine/profiles
 
@@ -63,6 +69,13 @@ VOLUME ["/engine/profiles"]
 
 ENTRYPOINT ["othello_exec"]
 CMD ["15", "2000"]
+
+FROM runtime AS server
+
+EXPOSE 50051
+
+ENTRYPOINT ["othello_server"]
+CMD []
 
 FROM runtime AS benchmark
 

@@ -1,5 +1,6 @@
 -std=c++23
 -Iinclude
 -I.
+-I.clangd-deps/generated
 -isystem
 .clangd-deps/usr/include
