@@ -46,8 +46,8 @@ public:
     std::future<ReturnType> res = task->get_future();
     {
       std::unique_lock<std::mutex> lock(queueMutex);
-      // Don't allow enqueueing after stopping the pool
       if (stop) {
+        // Don't allow enqueueing after stopping the pool
         throw std::runtime_error("Enqueue on stopped ThreadPool");
       }
       tasks.emplace([task]() { (*task)(); });
