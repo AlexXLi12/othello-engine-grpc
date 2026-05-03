@@ -1,0 +1,23 @@
+include/utils/ThreadPool.hpp
+  393b7142df307506 50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "9eb09f760f7039d0c807f956a80a8108ce0bab07",
+  "prompts": {
+    "393b7142df307506": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019df017-d4ba-7d52-9f50-27765be4be9e",
+        "model": "codex-auto-review"
+      },
+      "human_author": "Alex Li <alexxuanqili@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
