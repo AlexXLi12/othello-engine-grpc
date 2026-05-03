@@ -23,10 +23,12 @@ This repository currently contains a working single-node engine with parallel ro
 - **GoogleTest-based unit tests**
 - **Dockerized build, test, runtime, and benchmark targets**
 - **Proto definition** for an eventual gRPC engine service
+- **Simple gRPC server** exposing `EngineService.FindBestMove`
 
 ## What is not finished yet
 
-- The **gRPC server/client implementation** is not wired up yet
+- The **gRPC server implementation** is intentionally minimal; there is no
+  client/load generator yet
 - The engine is still effectively a **single-node process**, not a distributed system
 - There is no real **request queue, load balancer, worker orchestration, or service discovery** yet
 - The current transposition-table design is practical, but not yet a custom cache-tuned or distributed TT
@@ -184,12 +186,20 @@ It defines:
 - `FindBestMoveResponse`
 - `GameState`
 
-What is missing is the actual implementation layer:
-- generated stubs wired into the build
-- server implementation
-- request translation into engine calls
+The Docker build now generates C++ stubs and builds a simple server:
+
+```bash
+just server
+```
+
+The server listens on `0.0.0.0:50051` by default and exposes
+`EngineService.FindBestMove`. `depth_limit=0` and `time_limit_ms=0` use server
+defaults.
+
+What is still missing:
 - client or load generator
-- timeout/depth control semantics at the service boundary
+- structured search telemetry from the engine
+- richer timeout/depth semantics at the service boundary
 
 ## Where this project can go next
 

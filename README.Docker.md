@@ -36,6 +36,15 @@ Or:
 just run 10 1000
 ```
 
+## gRPC Server
+
+```bash
+just server
+```
+
+The server listens on port `50051` by default. Override the bind address with
+`OTHELLO_SERVER_ADDRESS`.
+
 ## Tests
 
 ```bash
