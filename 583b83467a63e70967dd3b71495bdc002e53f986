@@ -1,0 +1,45 @@
+Dockerfile
+  2e604aa41b5099cb 19,23,25-26,54,62,73-78
+compose.yaml
+  2e604aa41b5099cb 16-25
+CMakeLists.txt
+  2e604aa41b5099cb 30-31,34,37-47,49-64,73
+justfile
+  393b7142df307506 13-14
+  2e604aa41b5099cb 19-21
+src/server.cpp
+  2e604aa41b5099cb 1-106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "583b83467a63e70967dd3b71495bdc002e53f986",
+  "prompts": {
+    "2e604aa41b5099cb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019df00a-e0e7-7e30-8783-6e4db5528573",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Alex Li <alexxuanqili@gmail.com>",
+      "messages": [],
+      "total_additions": 190,
+      "total_deletions": 6,
+      "accepted_lines": 190,
+      "overriden_lines": 0
+    },
+    "393b7142df307506": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019df017-d4ba-7d52-9f50-27765be4be9e",
+        "model": "codex-auto-review"
+      },
+      "human_author": "Alex Li <alexxuanqili@gmail.com>",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 3,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
