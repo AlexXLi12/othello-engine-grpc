@@ -1,0 +1,25 @@
+README.md
+  2e604aa41b5099cb 26,30-31,189-199,201-202
+README.Docker.md
+  2e604aa41b5099cb 39-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "f2cb24a2ed5a07e85a6fa2cda7f3a2a1277a6978",
+  "prompts": {
+    "2e604aa41b5099cb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019df00a-e0e7-7e30-8783-6e4db5528573",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Alex Li <alexxuanqili@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 25,
+      "overriden_lines": 0
+    }
+  }
+}
