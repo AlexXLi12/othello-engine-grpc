@@ -17,7 +17,16 @@ run depth="15" time_ms="2000":
     docker compose run --rm --build engine {{depth}} {{time_ms}}
 
 server:
-    docker compose up --build server
+    #!/usr/bin/env bash
+    set -euo pipefail
+    node web/server.mjs &
+    web_pid=$!
+    trap 'kill "$web_pid" 2>/dev/null || true' EXIT INT TERM
+    echo "Othello web UI: http://localhost:${OTHELLO_WEB_PORT:-8080}"
+    COMPOSE_MENU=false docker compose up --build server
+
+frontend:
+    node web/server.mjs
 
 test:
     docker compose --profile test up --build --abort-on-container-exit --exit-code-from test test

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Othello Engine Console</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="workspace" aria-label="Othello board editor">
+        <div class="masthead">
+          <div>
+            <p class="eyebrow">Othello Engine</p>
+            <h1>Position Console</h1>
+          </div>
+          <div class="status-strip" aria-label="Current position summary">
+            <span><strong id="blackCount">2</strong> black</span>
+            <span><strong id="whiteCount">2</strong> white</span>
+            <span><strong id="emptyCount">60</strong> empty</span>
+          </div>
+        </div>
+
+        <div class="board-frame">
+          <div class="file-labels" aria-hidden="true">
+            <span>A</span><span>B</span><span>C</span><span>D</span>
+            <span>E</span><span>F</span><span>G</span><span>H</span>
+          </div>
+          <div class="board-row">
+            <div class="rank-labels" aria-hidden="true">
+              <span>1</span><span>2</span><span>3</span><span>4</span>
+              <span>5</span><span>6</span><span>7</span><span>8</span>
+            </div>
+            <div id="board" class="board" role="grid" aria-label="Editable Othello board"></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="controls" aria-label="Controls">
+        <section class="panel compact">
+          <div class="section-title">
+            <h2>Move Side</h2>
+            <span id="turnBadge">Black</span>
+          </div>
+          <div class="segmented" role="group" aria-label="Side to move">
+            <button type="button" id="turnBlack" class="selected">Black</button>
+            <button type="button" id="turnWhite">White</button>
+          </div>
+        </section>
+
+        <section class="panel compact">
+          <div class="section-title">
+            <h2>Paint</h2>
+            <span id="paintBadge">Black</span>
+          </div>
+          <button type="button" id="editMode" class="command mode-toggle">Edit board</button>
+          <div class="tool-grid" role="group" aria-label="Board paint mode">
+            <button type="button" id="paintBlack" class="tool selected" aria-label="Paint black discs">
+              <span class="disc black"></span>
+            </button>
+            <button type="button" id="paintWhite" class="tool" aria-label="Paint white discs">
+              <span class="disc white"></span>
+            </button>
+            <button type="button" id="paintEmpty" class="tool empty-tool" aria-label="Clear squares"></button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-title">
+            <h2>Engine</h2>
+          </div>
+          <label class="field">
+            <span>Depth</span>
+            <input id="depthLimit" type="number" min="1" max="60" step="1">
+          </label>
+          <label class="field">
+            <span>Timeout</span>
+            <div class="with-unit">
+              <input id="timeLimitMs" type="number" min="1" step="50">
+              <span>ms</span>
+            </div>
+          </label>
+        </section>
+
+        <section class="panel">
+          <div class="section-title">
+            <h2>Position</h2>
+            <span id="gameStatus">Black to move</span>
+          </div>
+          <div class="actions">
+            <button type="button" id="engineMove" class="command primary">Engine move</button>
+            <button type="button" id="resetBoard" class="command primary">Starting board</button>
+            <button type="button" id="clearBoard" class="command">Clear board</button>
+          </div>
+        </section>
+
+        <section class="panel output-panel">
+          <div class="section-title">
+            <h2>Request</h2>
+            <button type="button" id="copyRequest" class="text-button">Copy</button>
+          </div>
+          <p id="serverStatus" class="server-status">Server requests use the local proxy.</p>
+          <pre id="requestPreview" tabindex="0" aria-label="Engine request JSON"></pre>
+        </section>
+
+        <section class="panel output-panel">
+          <div class="section-title">
+            <h2>Response</h2>
+            <button type="button" id="toggleRawResponse" class="text-button">Raw</button>
+          </div>
+          <p id="evalSummary" class="server-status">No engine response yet.</p>
+          <pre id="responsePreview" class="hidden" tabindex="0" aria-label="Raw engine response JSON"></pre>
+        </section>
+      </aside>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

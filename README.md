@@ -157,6 +157,15 @@ Run the benchmark image:
 just benchmark
 ```
 
+Run the gRPC server and local frontend:
+
+```bash
+just server
+```
+
+The frontend is served at `http://localhost:8080` and proxies engine requests to
+the gRPC server at `localhost:50051`.
+
 Profiling support is built into the Docker images, but profile collection is off
 unless `OTHELLO_PROFILE=1` is set.
 
