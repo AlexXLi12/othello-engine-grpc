@@ -2,7 +2,7 @@
 
 A high-performance Othello/Reversi engine written in modern C++ with a focus on search performance, compact board representation, and clear systems-oriented design.
 
-This repository currently contains a working single-node engine with parallel root search, a benchmark target, unit tests, and an early gRPC contract. The distributed/service side is still a work in progress.
+This repository currently contains a working single-node engine with parallel root search, a benchmark target, unit tests, a simple gRPC service, and a small local Web UI.
 
 ## What is implemented today
 
@@ -22,13 +22,12 @@ This repository currently contains a working single-node engine with parallel ro
 - **Benchmark executable** for measuring search throughput
 - **GoogleTest-based unit tests**
 - **Dockerized build, test, runtime, and benchmark targets**
-- **Proto definition** for an eventual gRPC engine service
 - **Simple gRPC server** exposing `EngineService.FindBestMove`
+- **Local Web UI** for exploring engine responses
 
 ## What is not finished yet
 
-- The **gRPC server implementation** is intentionally minimal; there is no
-  client/load generator yet
+- The **gRPC service** is intentionally minimal and does not expose full search telemetry yet
 - The engine is still effectively a **single-node process**, not a distributed system
 - There is no real **request queue, load balancer, worker orchestration, or service discovery** yet
 - The current transposition-table design is practical, but not yet a custom cache-tuned or distributed TT
@@ -157,6 +156,44 @@ Run the benchmark image:
 just benchmark
 ```
 
+Run the benchmark with CPU profiling enabled:
+
+```bash
+just profile
+```
+
+This writes the raw gperftools CPU profile to:
+
+```text
+profiles/cpu_5_thread.prof
+```
+
+Generate an SVG flamegraph from that profile:
+
+```bash
+just profile-svg
+```
+
+The rendered flamegraph is written to:
+
+```text
+profiles/cpu_5_thread.svg
+```
+
+Open the interactive pprof browser UI:
+
+```bash
+just profile-web
+```
+
+This starts pprof at `http://localhost:8081`, where you can inspect the graph,
+flame graph, top functions, source listings, and call stacks. Pass a different
+port if needed:
+
+```bash
+just profile-web 8082
+```
+
 Run the gRPC server and local frontend:
 
 ```bash
@@ -166,20 +203,25 @@ just server
 The frontend is served at `http://localhost:8080` and proxies engine requests to
 the gRPC server at `localhost:50051`.
 
-Profiling support is built into the Docker images, but profile collection is off
-unless `OTHELLO_PROFILE=1` is set.
+Profiling support is built into the Docker images. Profile collection is off
+unless `OTHELLO_PROFILE=1` is set, and the `just profile` target handles that
+for the benchmark path.
 
 Targets include:
 - `othello_exec`
 - `othello_benchmark`
+- `othello_server`
 - test targets under `tests/`
 
 ## Current caveats
 
 A few things are worth calling out explicitly:
 
-- The README used to describe some future-facing service/distributed ideas more strongly than the current code justified.
-- The gRPC layer is currently just a **proto contract**, not a finished service.
+- The gRPC service is working, but the response contract is still thin: it
+  returns a best move and a simple evaluator score, not full search telemetry.
+- The Web UI talks to gRPC through a small local Node proxy that manually encodes
+  the current protobuf messages. It is useful for local exploration, but it is
+  not a general generated-client setup.
 - `main.cpp` still looks more like an interactive local executable than a service entrypoint.
 - The current system is best described as a **fast local engine with some parallel search**, not yet a distributed engine platform.
 
@@ -195,80 +237,35 @@ It defines:
 - `FindBestMoveResponse`
 - `GameState`
 
-The Docker build now generates C++ stubs and builds a simple server:
+The Docker build generates C++ stubs and builds a simple server:
 
 ```bash
 just server
 ```
 
-The server listens on `0.0.0.0:50051` by default and exposes
-`EngineService.FindBestMove`. `depth_limit=0` and `time_limit_ms=0` use server
-defaults.
+`just server` starts:
+- the C++ gRPC service on `0.0.0.0:50051`
+- the local Web UI on `http://localhost:8080`
 
-What is still missing:
-- client or load generator
-- structured search telemetry from the engine
-- richer timeout/depth semantics at the service boundary
+The service exposes `EngineService.FindBestMove`. `depth_limit=0` and
+`time_limit_ms=0` use server defaults.
 
-## Where this project can go next
+## Authorship Notes
 
-This project becomes much more compelling if it evolves from “strong engine” into “strong engine turned into a systems artifact.”
+### Fully hand-written
 
-### High-leverage next steps
+- Othello rules
+- Move generation logic
+- Bitboard implementation
+- Negamax search with alpha-beta pruning, PVS-style search, move ordering, and transposition-table integration
+- Evaluators
+- Thread pool implementation, with some reference to common online thread-pool patterns
 
-1. **Finish the gRPC service**
-   - implement server + request handling
-   - expose depth/time controls cleanly
-   - return structured search metadata
+### AI-assisted
 
-2. **Add a real benchmark/service harness**
-   - request latency
-   - throughput under concurrency
-   - queueing behavior
-   - tail latency under load
+- Build configuration
+- Docker configuration
+- Web components (`web/*`)
+- gRPC server
 
-3. **Turn it into a multi-process/containerized system**
-   - one frontend service
-   - worker processes for search jobs
-   - containerized deployment with Compose/Kubernetes later if needed
-
-4. **Make the project observable**
-   - request metrics
-   - profiling hooks
-   - cache hit rate
-   - nodes searched
-   - time spent in move generation vs search vs evaluation
-
-5. **Upgrade the TT / search infrastructure**
-   - more cache-conscious storage
-   - capacity/replacement policy experiments
-   - contention-aware shared-state design
-   - possibly explore distributed result caching only after local performance is solid
-
-6. **Document the engineering tradeoffs**
-   - why this concurrency model
-   - why this board representation
-   - where the bottlenecks are
-   - what changed after profiling
-
-## Why those next steps matter
-
-If the goal is eventually to work on systems-heavy teams — the kind of places doing serious database, infra, and query/data-engine work — then the strongest version of this repo is not just:
-
-> “I built a game engine.”
-
-It is:
-
-> “I built a performant engine core, exposed it as a service, measured it under load, and used that to explore concurrency, caching, latency, and distributed-system tradeoffs.”
-
-That story is much closer to real infrastructure work.
-
-## Summary
-
-Today, this repo is already a solid engine project with real technical substance:
-- compact representation
-- serious search implementation
-- parallelism
-- benchmarking mindset
-
-The next leap is to make it a systems project, not just an engine project.
+All AI-assisted components were reviewed, edited, and tested before inclusion.

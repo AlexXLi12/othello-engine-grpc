@@ -2,5 +2,6 @@
 .clangd-deps/
 build/
 *.prof
+profiles/
 # Added by code-review-graph
 .code-review-graph/

@@ -39,6 +39,10 @@ RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
     -DOTHELLO_DOCKER_BUILD=ON \
  && cmake --build build --parallel
 
+FROM golang:bookworm AS pprof
+
+RUN go install github.com/google/pprof@latest
+
 FROM build AS test
 
 RUN ctest --test-dir build --output-on-failure
@@ -50,6 +54,7 @@ FROM base AS runtime
 WORKDIR /engine
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    graphviz \
     google-perftools \
     libgrpc++1 \
  && rm -rf /var/lib/apt/lists/* \
@@ -60,6 +65,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=build /workspace/build/othello_exec /usr/local/bin/othello_exec
 COPY --from=build /workspace/build/othello_benchmark /usr/local/bin/othello_benchmark
 COPY --from=build /workspace/build/othello_server /usr/local/bin/othello_server
+COPY --from=pprof /go/bin/pprof /usr/local/bin/pprof
 
 ENV OTHELLO_PROFILE_DIR=/engine/profiles
 

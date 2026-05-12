@@ -10,7 +10,7 @@ services:
       OTHELLO_PROFILE: ${OTHELLO_PROFILE:-0}
       OTHELLO_PROFILE_DIR: /engine/profiles
     volumes:
-      - profiles:/engine/profiles
+      - ./profiles:/engine/profiles
     command: ["15", "2000"]
 
   server:
@@ -33,7 +33,7 @@ services:
       OTHELLO_PROFILE: ${OTHELLO_PROFILE:-0}
       OTHELLO_PROFILE_DIR: /engine/profiles
     volumes:
-      - profiles:/engine/profiles
+      - ./profiles:/engine/profiles
 
   test:
     profiles: ["test"]
@@ -41,6 +41,3 @@ services:
       context: .
       target: test
     image: othello-engine-test:local
-
-volumes:
-  profiles:
