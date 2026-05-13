@@ -156,19 +156,47 @@ Run the benchmark image:
 just benchmark
 ```
 
-Run the benchmark with CPU profiling enabled:
+`just benchmark` runs the current benchmark image without rebuilding it. Rebuild
+the benchmark image explicitly when code changes:
 
 ```bash
-just profile
+just benchmark-build
+```
+
+The benchmark executable is parameterized and emits per-position search metrics
+such as elapsed time, nodes searched, nodes per second, cache hits, score, and
+completed depth:
+
+```bash
+just benchmark       # text
+just benchmark-csv   # CSV
+just benchmark-json  # JSON
+```
+
+```bash
+docker compose --profile benchmark run --rm --no-deps benchmark \
+  --depths 5,10,13 --positions 25 --plies 20 --threads 5 --format csv
+```
+
+Run one scenario with CPU profiling enabled:
+
+```bash
+just profile-run
 ```
 
 This writes the raw gperftools CPU profile to:
 
 ```text
-profiles/cpu_5_thread.prof
+profiles/cpu_profile.prof
 ```
 
-Generate an SVG flamegraph from that profile:
+You can target a specific scenario and profile filename:
+
+```bash
+just profile-run 10 20 5 1 depth10_threads5.prof
+```
+
+Generate an SVG flamegraph from an existing profile:
 
 ```bash
 just profile-svg
@@ -177,10 +205,10 @@ just profile-svg
 The rendered flamegraph is written to:
 
 ```text
-profiles/cpu_5_thread.svg
+profiles/cpu_profile.svg
 ```
 
-Open the interactive pprof browser UI:
+Open the interactive pprof browser UI for an existing profile:
 
 ```bash
 just profile-web
@@ -188,10 +216,10 @@ just profile-web
 
 This starts pprof at `http://localhost:8081`, where you can inspect the graph,
 flame graph, top functions, source listings, and call stacks. Pass a different
-port if needed:
+port or profile if needed:
 
 ```bash
-just profile-web 8082
+just profile-web 8082 depth10_threads5.prof
 ```
 
 Run the gRPC server and local frontend:
@@ -204,8 +232,9 @@ The frontend is served at `http://localhost:8080` and proxies engine requests to
 the gRPC server at `localhost:50051`.
 
 Profiling support is built into the Docker images. Profile collection is off
-unless `OTHELLO_PROFILE=1` is set, and the `just profile` target handles that
-for the benchmark path.
+unless `OTHELLO_PROFILE=1` is set, and `just profile-run` handles that for the
+benchmark path. `profile-web` and `profile-svg` only inspect an existing profile;
+they do not rerun the benchmark.
 
 Targets include:
 - `othello_exec`

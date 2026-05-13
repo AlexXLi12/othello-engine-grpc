@@ -8,6 +8,7 @@
 #include "../utils/ThreadPool.hpp"
 #include "GameBoard.hpp"
 #include "evaluator/Evaluator.hpp"
+#include <atomic>
 #include <cstdint>
 #include <unordered_map>
 
@@ -32,6 +33,15 @@ struct TTEntry {
   int8_t move_index;       ///< The index of the move that led to this position (1 byte)
 }; ///< Total size: 8 bytes
 
+struct SearchStats {
+  int nodes_searched = 0;
+  int cache_hits = 0;
+  int best_move = -1;
+  int score = 0;
+  int completed_depth = 0;
+  bool time_limit_hit = false;
+};
+
 /// @brief Represents the game engine for Othello
 /// @details The engine performs a negamax search with alpha-beta pruning to
 /// find the best move.
@@ -53,6 +63,10 @@ public:
   ///         no valid moves are available.
   int findBestMove(const GameBoard &board, uint8_t max_depth, Color color,
                    int time_limit_ms);
+
+  void setVerbose(bool enabled) { verbose = enabled; }
+
+  SearchStats lastSearchStats() const { return last_stats; }
 
 private:
   std::atomic<int>
@@ -79,7 +93,10 @@ private:
 
   /// The evaluator to use for scoring the board
   const Evaluator &evaluator;
+
+  bool verbose = true;
+
+  SearchStats last_stats;
 };
 
 } // namespace othello
-

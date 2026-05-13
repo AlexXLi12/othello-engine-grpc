@@ -60,10 +60,12 @@ std::vector<int> order_moves(uint64_t moves_bb,
 int Engine::findBestMove(const GameBoard &board, uint8_t max_depth, Color color,
                          int time_limit_ms) {
   const auto start_time = std::chrono::steady_clock::now();
+  last_stats = SearchStats{};
 
   uint64_t bb = getPossibleMoves(board, color);
-  if (!bb)
+  if (!bb) {
     return -1;
+  }
 
   // One TT per root move (reused across depths)
   std::vector<TT> tt_per_move(std::popcount(bb));
@@ -82,7 +84,11 @@ int Engine::findBestMove(const GameBoard &board, uint8_t max_depth, Color color,
                           std::chrono::steady_clock::now() - start_time)
                           .count();
     if (elapsed_ms >= time_limit_ms) {
-      std::cout << "Time limit reached at depth " << (depth - 1) << std::endl;
+      last_stats.time_limit_hit = true;
+      if (verbose) {
+        std::cout << "Time limit reached at depth " << (depth - 1)
+                  << std::endl;
+      }
       break;
     }
 
@@ -144,11 +150,18 @@ int Engine::findBestMove(const GameBoard &board, uint8_t max_depth, Color color,
     }
 
     best_pair = depth_best;
+    last_stats.completed_depth = depth;
   }
-  std::cout << "Nodes searched: " << nodesSearched
-            << " | Cache hits: " << cacheHits << std::endl;
-  std::cout << "Best move: " << best_pair.second
-            << " | Score: " << best_pair.first << std::endl;
+  last_stats.nodes_searched = nodesSearched.load();
+  last_stats.cache_hits = cacheHits.load();
+  last_stats.best_move = best_pair.second;
+  last_stats.score = last_stats.completed_depth > 0 ? best_pair.first : 0;
+  if (verbose) {
+    std::cout << "Nodes searched: " << nodesSearched
+              << " | Cache hits: " << cacheHits << std::endl;
+    std::cout << "Best move: " << best_pair.second
+              << " | Score: " << best_pair.first << std::endl;
+  }
   return best_pair.second;
 }
 

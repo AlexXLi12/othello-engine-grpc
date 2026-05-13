@@ -35,6 +35,7 @@ COPY tests ./tests
 COPY proto ./proto
 
 RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_CXX_FLAGS_RELEASE="-O3 -DNDEBUG -g -fno-omit-frame-pointer" \
     -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
     -DOTHELLO_DOCKER_BUILD=ON \
  && cmake --build build --parallel
@@ -54,6 +55,7 @@ FROM base AS runtime
 WORKDIR /engine
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    binutils \
     graphviz \
     google-perftools \
     libgrpc++1 \
